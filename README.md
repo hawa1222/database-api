@@ -2,22 +2,13 @@
 
 The Database API is a dynamic API built with FastAPI that simplifies interactions with a MySQL database. It provides endpoints for connecting to the database and creating, loading, fetching, and deleting tables.
 
-## Table of Contents
+## Project Objectives
 
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-  - [Authentication](#authentication)
-  - [Database Operations](#database-operations)
-  - [User Operations](#user-operations)
-  - [Table Operations](#table-operations)
-  - [Data Operations](#data-operations)
-- [Project Structure](#project-structure)
-- [Testing](#testing)
-- [Logging](#logging)
-- [Contributing](#contributing)
-- [License](#license)
+- Develop a dynamic FastAPI to simplify MySQL database interactions
+- Implement secure authentication and role-based access control using OAuth2 and JWT
+- Follow best practices for project structure and logging
+- Optimize database operations with asynchronous programming using SQLAlchemy and asyncio
+- Provide comprehensive API documentation and usage examples
 
 ## Prerequisites
 
@@ -29,23 +20,23 @@ Before running the Database API, ensure you have the following software installe
 ## Installation
 
 1. Clone the repository:
+   ```bash
+   git clone https://github.com/hawa1222/database-api.git
+   ```
 
-```bash
-git clone https://github.com/hawa1222/database-api.git
-```
-```bash
-cd database-api
-```
+2. Navigate to the project directory:
+   ```
+   cd database-api
+   ```
 
-2. Install the project dependencies using Poetry:
-
-```bash
-poetry install
-```
+3. Install the project dependencies using Poetry:
+   ```bash
+   poetry install
+   ```
 
 ## Configuration
 
-1. Create a `.env` file in the project root directory and provide the environment variables as specified in .env_template
+1. Create a `.env` file in the project root directory and provide the environment variables as specified in `.env_template`.
 
 2. Generate SSL certificate and key files (`cert.pem` and `key.pem`) and place them in the project root directory (optional).
 
@@ -57,7 +48,7 @@ To start the Database API server, run the following command:
 poetry run uvicorn app.main:app --reload
 ```
 
-The API will be accessible at `http://localhost:8000/docs`.
+The API will be accessible at [http://localhost:8000/docs](http://localhost:8000/docs/).
 
 ### Authentication
 
@@ -86,65 +77,25 @@ The Database API uses OAuth2 with JWT for authentication. To access protected en
 
 For detailed information about request and response formats, refer to the API documentation.
 
-## Project Structure
+## Project Architecture
 
-The project structure is organized as follows:
+The project consists of the following components:
 
-```plaintext
-database_api/
-├── .env
-├── .gitignore
-├── cert.pem
-├── key.pem
-├── logs/
-│   └── logs.txt
-├── poetry.lock
-├── poetry.toml
-├── pyproject.toml
-├── README.md
-│
-├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   │
-│   ├── auth/
-│   │   ├── __init__.py
-│   │   ├── auth.py
-│   │   └── permissions.py
-│   │
-│   ├── database/
-│   │   ├── __init__.py
-│   │   ├── crud.py
-│   │   ├── database.py
-│   │   └── models.py
-│   │
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   └── schemas.py
-│   │
-│   └── utils/
-│       ├── __init__.py
-│       ├── create_admin.py
-│       └── logging.py
-│
-└── tests/
-    ├── __init__.py
-    ├── api_test.py
-    └── integration_testing.py
-```
+- FastAPI: A Python web framework for building APIs. It serves as the main entry point for the API and handles incoming requests and outgoing responses.
 
-<!-- ## Testing
+- Authentication and Authorisation: The API utilises OAuth2 with JWT (JSON Web Tokens) for secure authentication and authorisation. It implements role-based access control to differentiate between admin and non-admin users.
 
-The project includes unit tests and integration tests. To run the tests, use the following command:
+- Database (MySQL): The API interacts with a MySQL database for storing and retrieving data. It provides endpoints for creating databases, tables, and performing CRUD operations on the data.
 
-```bash
-poetry run pytest
-``` -->
+- SQLAlchemy: A SQL toolkit and Object-Relational Mapping (ORM) library for Python. It is used to define the database models, establish connections, and perform database operations asynchronously.
 
-## Logging
+- Pydantic: A Python library for data validation and settings management using Python type annotations. It is used to define and validate request and response models, ensuring data integrity and consistency.
 
-The Database API utilises logging to track important events and errors. Log files are stored in the `logs/` directory.
+- Logging: The project incorporates logging to track important events, errors, and system behavior. Log files are stored in the `logs/` directory.
+
+- Packaging and Dependency Management: The project uses Poetry, a modern Python packaging and dependency management tool.
+
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
