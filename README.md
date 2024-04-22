@@ -133,13 +133,13 @@ database_api/
     └── integration_testing.py
 ```
 
-## Testing
+<!-- ## Testing
 
 The project includes unit tests and integration tests. To run the tests, use the following command:
 
 ```bash
 poetry run pytest
-```
+``` -->
 
 ## Logging
 
