@@ -52,9 +52,9 @@ Before running the Database API, ensure you have the following software installe
    ```bash
    poetry install
    ```
-3. Create a `.env` file in the project root directory and provide the environment variables as specified in `.env_template`.
+4. Create a `.env` file in the project root directory and provide the environment variables as specified in `.env_template`.
 
-4. Generate SSL certificate and key files (`cert.pem` and `key.pem`) and place them in the project root directory (optional).
+5. Generate SSL certificate and key files (`cert.pem` and `key.pem`) and place them in the project root directory (optional).
 
 ## Usage
 
