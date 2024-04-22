@@ -1,15 +1,22 @@
-import logging
 import os
+import logging
 from logging.handlers import RotatingFileHandler
+from dotenv import load_dotenv
+
+# ------------------------------
+# Environment Variables
+# ------------------------------
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Constants
 LOGGING_LEVEL = os.getenv('LOGGING_LEVEL', 'INFO')
 ROOT_DIRECTORY = os.getenv('ROOT_DIRECTORY', '.')
 
-# Define the setup_logging function to configure logging settings
-import logging
-import os
-from logging.handlers import RotatingFileHandler
+# ------------------------------
+# Logging Configuration
+# ------------------------------
 
 def setup_logging():
     """
