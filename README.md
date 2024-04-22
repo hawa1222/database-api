@@ -1,6 +1,6 @@
 # Database API
 
-The Database API is a dynamic API built with FastAPI that simplifies interactions with a MySQL database. It provides endpoints for connecting to the database, creating and loading data/tables, deleting, updating, and querying data.
+The Database API is a dynamic API built with FastAPI that simplifies interactions with a MySQL database. It provides endpoints for connecting to the database and creating, loading, fetching, and deleting tables.
 
 ## Table of Contents
 
@@ -21,7 +21,10 @@ The Database API is a dynamic API built with FastAPI that simplifies interaction
 
 ## Prerequisites
 
-Before running the Database API, ensure you have the Python (3.12), Poetry (1.8.2), and MYSQL (8.3.0) installed
+Before running the Database API, ensure you have the following software installed:
+- Python (version 3.12)
+- Poetry (version 1.8.2)
+- MySQL (version 8.3.0)
 
 ## Installation
 
@@ -29,6 +32,8 @@ Before running the Database API, ensure you have the Python (3.12), Poetry (1.8.
 
 ```bash
 git clone https://github.com/hawa1222/database-api.git
+```
+```bash
 cd database-api
 ```
 
@@ -42,7 +47,7 @@ poetry install
 
 1. Create a `.env` file in the project root directory and provide the environment variables as specified in .env_template
 
-2. Generate SSL certificate and key files (`cert.pem` and `key.pem`) and place them in the project root directory.
+2. Generate SSL certificate and key files (`cert.pem` and `key.pem`) and place them in the project root directory (optional).
 
 ## Usage
 
@@ -138,11 +143,7 @@ poetry run pytest
 
 ## Logging
 
-The Database API utilizes logging to track important events and errors. Log files are stored in the `logs/` directory.
-
-## Contributing
-
-Contributions to the Database API are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
+The Database API utilises logging to track important events and errors. Log files are stored in the `logs/` directory.
 
 ## License
 
