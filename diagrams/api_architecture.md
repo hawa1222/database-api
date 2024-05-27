@@ -10,13 +10,13 @@ flowchart BT
         A000([Client])
     end
 
-    subgraph "Application Layer"
+    subgraph Application
         
         subgraph Server
             B([Uvicorn])
         end
 
-        subgraph Application
+        subgraph " "
             C([main.py])
         end
 
@@ -56,15 +56,15 @@ flowchart BT
         G[(MySQL)]
     end
 
-    UI -.-> Client
+    A0 & A00 -.-> Client
     Client -.->|http://localhost:8000<br>GET/POST/DELETE| Server
 
-    Server -.-> |/app| Application
+    Server -.-> |/app| C
 
-    Application --> |/models| ORM
-    Application --> |/routes| D1
-    Application --> |/routes| D2
-    Application --> |/database| I3
+    C --> |/models| ORM
+    C --> |/routes| D1
+    C --> |/routes| D2
+    C --> |/database| I3
 
     E1 & E2 --> |/schemas| Pydantic
     E1 --> |/models| ORM
@@ -72,8 +72,8 @@ flowchart BT
     Authenication --> |/database| I3
     D1 --> |/crud| E1
     D2 --> |/crud| E2
-    D1 --> |/database| I3
-    D2 --> |/database| I3
+    E1 --> |/database| I3
+    E2 --> |/database| I3
 
     ORM --> |/database| I2
 
