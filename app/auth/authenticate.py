@@ -37,7 +37,7 @@ async def check_user_exists(db: AsyncSession, username: str):
 
     """
 
-    logger.info("auth_users.py ---> check_user_exists:")
+    logger.info("authenticate.py ---> check_user_exists:")
 
     try:
         # Create query to retrieve user by their username
@@ -83,7 +83,7 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
         HTTPException (401): authentication fails due to invalid credentials.
     """
 
-    logger.info("auth_users.py ---> authenticate_user:")
+    logger.info("authenticate.py ---> authenticate_user:")
 
     # Check if user exists in database
     user = await check_user_exists(db, username)

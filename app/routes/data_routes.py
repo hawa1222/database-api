@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth import authorise
+from app.crud import data_crud
+from app.database import db_connect
+from app.schemas import auth_schemas, data_schemas
+from app.utils.logging import setup_logging
 
 # Custom imports
 from config import Settings
-from app.utils.logging import setup_logging
-
-from app.schemas import auth_schemas, data_schemas
-from app.auth import permissions
-from app.database import db_connect
-from app.crud import data_crud
 
 # ------------------------------
 # Set up logging
@@ -33,16 +33,20 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 # Create new database
-@router.post('/create-database', status_code=201,
-             summary='Create new database', tags=["Database"])
+@router.post(
+    "/create-database",
+    status_code=201,
+    summary="Create new database",
+    tags=["Database"],
+)
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def create_database(
     request: Request,
     database: data_schemas.DatabaseCreate,
     db: AsyncSession = Depends(db_connect.get_db),
-    current_user: auth_schemas.User = Depends(permissions.admin_user)
+    current_user: auth_schemas.User = Depends(authorise.admin_user),
 ):
-    '''
+    """
     Endpoint allows authenticated user with or without
     admin privileges to create new database.
 
@@ -71,24 +75,28 @@ async def create_database(
         'message': 'Database 'new_database' created successfully'
     }
     ```
-    '''
+    """
 
-    logger.info('data_routes ---> create_database:')
+    logger.info("data_routes ---> create_database:")
 
     return await data_crud.create_database(db, database)
 
 
 # Create new database user
-@router.post('/create-db-user', status_code=201,
-             summary='Create new database user', tags=['User'])
+@router.post(
+    "/create-db-user",
+    status_code=201,
+    summary="Create new database user",
+    tags=["User"],
+)
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def create_db_user(
     request: Request,
     user: auth_schemas.DBUserCreate,
     db: AsyncSession = Depends(db_connect.get_db),
-    current_user: auth_schemas.User = Depends(permissions.admin_user)
+    current_user: auth_schemas.User = Depends(authorise.admin_user),
 ):
-    '''
+    """
     Endpoint allows authenticated admin user to create new database user.
 
     Parameters:
@@ -121,24 +129,25 @@ async def create_db_user(
         'message': 'DB user "db_user" created successfully'
     }
     ```
-    '''
+    """
 
-    logger.info('data_routes ---> create_db_user:')
+    logger.info("data_routes ---> create_db_user:")
 
     return await data_crud.create_db_user(db, user)
 
 
 # Create new table
-@router.post('/create-table', status_code=201,
-             summary='Create new table', tags=['Tables'])
+@router.post(
+    "/create-table", status_code=201, summary="Create new table", tags=["Tables"]
+)
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def create_table(
     request: Request,
     tables: data_schemas.TableCreate,
     db: AsyncSession = Depends(db_connect.get_db),
-    current_user: auth_schemas.User = Depends(permissions.admin_user)
+    current_user: auth_schemas.User = Depends(authorise.admin_user),
 ):
-    '''
+    """
     Endpoint allows authenticated user to create new table in database.
 
     Parameters:
@@ -174,24 +183,25 @@ async def create_table(
                     successfully in database "new_database"'
     }
     ```
-    '''
+    """
 
-    logger.info('data_routes ---> create_table:')
+    logger.info("data_routes ---> create_table:")
 
     return await data_crud.create_table(db, tables)
 
 
 # Insert datinto table
-@router.post('/insert-data', status_code=201,
-             summary='Insert datinto table', tags=['Tables'])
+@router.post(
+    "/insert-data", status_code=201, summary="Insert datinto table", tags=["Tables"]
+)
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def insert_data(
     request: Request,
     data_insert: data_schemas.TableData,
     db: AsyncSession = Depends(db_connect.get_db),
-    current_user: auth_schemas.User = Depends(permissions.admin_user)
+    current_user: auth_schemas.User = Depends(authorise.admin_user),
 ):
-    '''
+    """
     Endpoint allows authenticated admin user to insert datinto database.
 
     Parameters:
@@ -234,24 +244,29 @@ async def insert_data(
                     "new_database": 2 records added, 0 records updated'
     }
     ```
-    '''
+    """
 
-    logger.info('data_routes ---> insert_data:')
+    logger.info("data_routes ---> insert_data:")
 
     return await data_crud.insert_data(db, data_insert)
 
 
 # Get datfrom table
-@router.get('/get-table/{db_name}/{table_name}', status_code=200,
-            summary='Get table data', tags=['Tables'])
+@router.get(
+    "/get-table/{db_name}/{table_name}",
+    status_code=200,
+    summary="Get table data",
+    tags=["Tables"],
+)
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def get_table(
     request: Request,
-    db_name: str, table_name: str,
+    db_name: str,
+    table_name: str,
     db: AsyncSession = Depends(db_connect.get_db),
-    current_user: auth_schemas.User = Depends(permissions.active_user)
+    current_user: auth_schemas.User = Depends(authorise.active_user),
 ):
-    '''
+    """
     Endpoint allows authenticated admin user to retrieve datfrom table.
 
     Parameters:
@@ -288,28 +303,32 @@ async def get_table(
             }
         ]
     }
-    '''
+    """
 
-    logger.info('data_routes ---> get_table:')
+    logger.info("data_routes ---> get_table:")
 
     # Create table identification object
-    table_fetch = data_schemas.TableIdentify(db_name=db_name,
-                                             table_name=table_name)
+    table_fetch = data_schemas.TableIdentify(db_name=db_name, table_name=table_name)
 
     return await data_crud.get_table(db, table_fetch)
 
 
 # Delete table
-@router.delete('/delete-table/{db_name}/{table_name}', status_code=200,
-               summary='Delete table', tags=['Tables'])
+@router.delete(
+    "/delete-table/{db_name}/{table_name}",
+    status_code=200,
+    summary="Delete table",
+    tags=["Tables"],
+)
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def delete_table(
     request: Request,
-    db_name: str, table_name: str,
+    db_name: str,
+    table_name: str,
     db: AsyncSession = Depends(db_connect.get_db),
-    current_user: auth_schemas.User = Depends(permissions.admin_user)
+    current_user: auth_schemas.User = Depends(authorise.admin_user),
 ):
-    '''
+    """
     Endpoint allows authenticated admin user to delete table from database.
 
     Parameters:
@@ -336,12 +355,11 @@ async def delete_table(
         'message': 'Table "new_table" deleted successfully
             from database "new_database"'
     }
-    '''
+    """
 
-    logger.info('data_routes ---> delete_table:')
+    logger.info("data_routes ---> delete_table:")
 
     # Create table identification object
-    table_delete = data_schemas.TableIdentify(db_name=db_name,
-                                              table_name=table_name)
+    table_delete = data_schemas.TableIdentify(db_name=db_name, table_name=table_name)
 
     return await data_crud.delete_table(db, table_delete)
