@@ -1,12 +1,12 @@
-from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from app.auth import hashing
+from app.models import auth_models
+from app.utils.logging import setup_logging
 
 # Custom imports
 from config import Settings
-from app.utils.logging import setup_logging
-
-from app.models import auth_models
-from app.auth import hashing
 
 # ------------------------------
 # Set up logging
@@ -22,7 +22,7 @@ logger = setup_logging()
 
 # Function to create an admin user
 async def create_admin_user(db: AsyncSession):
-    '''
+    """
     Creates an admin user in database if it doesn't already exist.
 
     This function checks if admin user already exists in database.
@@ -31,35 +31,30 @@ async def create_admin_user(db: AsyncSession):
     with provided username and password, hashes password, and adds
     user to database.
 
-    Args:
+    Parameters:
         None
 
     Returns:
         None
-    '''
+    """
 
-    logger.info('create_admin.py ---> create_admin_user:')
+    logger.info("create_admin.py ---> create_admin_user:")
 
     # Check if admin user already exists
-    query = select(auth_models.User).where(
-        auth_models.User.username == Settings.API_ADM_USER)
+    query = select(auth_models.User).where(auth_models.User.username == Settings.API_ADM_USER)
     user = await db.execute(query)  # Execute query
     admin_user = user.scalars().first()  # Get first result
 
     # If admin_user is not None:
     if admin_user:
-        logger.info(f'Admin user "{Settings.API_ADM_USER}" '
-                    f'already exists, skipping creation.')
+        logger.info(f'Admin user "{Settings.API_ADM_USER}" ' f"already exists, skipping creation.")
     else:
         # Create admin user
         hashed_password = hashing.hash_password(Settings.API_ADM_PASSWORD)
         admin_user = auth_models.User(
-            username=Settings.API_ADM_USER,
-            hashed_password=hashed_password,
-            is_admin=True
+            username=Settings.API_ADM_USER, hashed_password=hashed_password, is_admin=True
         )
         db.add(admin_user)  # Add user to database
-        logger.info('Admin user added to database')
+        logger.info("Admin user added to database")
         await db.commit()  # Commit transaction
-        logger.info(f'Admin user "{Settings.API_ADM_USER}" created '
-                    f'successfully.')
+        logger.info(f'Admin user "{Settings.API_ADM_USER}" created ' f"successfully.")

@@ -1,7 +1,8 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
+from sqlalchemy.ext.
 from app.auth import hashing
 from app.models import auth_models
 
@@ -23,8 +24,7 @@ logger = setup_logging()
 # Function to retrieve user by their username
 async def check_user_exists(db: AsyncSession, username: str):
     """
-    Retrieve user from database by their username.
-
+    Retrieve user from database by their username
     Args:
         db (AsyncSession): database session.
         username (str): username of user to retrieve.
@@ -37,7 +37,7 @@ async def check_user_exists(db: AsyncSession, username: str):
 
     """
 
-    logger.info("authenticate.py ---> check_user_exists:")
+    logger.info('authenticate.py ---> check_user_exists:')
 
     try:
         # Create query to retrieve user by their username
@@ -61,7 +61,7 @@ async def check_user_exists(db: AsyncSession, username: str):
         logger.error(error_message)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
-        )
+        ) from e
 
 
 # Function to authenticate user based on provided username and password
@@ -70,7 +70,7 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
     Authenticate user by checking if provided username and password match
     stored credentials.
 
-    Args:
+    Parameters:
         db (AsyncSession): database session.
         username (str): username of user to authenticate.
         password (str): password of user to authenticate.
@@ -83,7 +83,7 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
         HTTPException (401): authentication fails due to invalid credentials.
     """
 
-    logger.info("authenticate.py ---> authenticate_user:")
+    logger.info('authenticate.py ---> authenticate_user:')
 
     # Check if user exists in database
     user = await check_user_exists(db, username)
@@ -94,6 +94,6 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
         return user
 
     # If authentication fails, log message and raise generic HTTPException
-    message = "Invalid username or password"
+    message = 'Invalid username or password'
     logger.error(message)
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=message)

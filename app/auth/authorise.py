@@ -35,7 +35,7 @@ async def active_user(
     """
     Retrieves current user based on provided token.
 
-    Args:
+    Parameters:
         db (AsyncSession): database session.
         token (str): authentication token.
 
@@ -59,15 +59,12 @@ async def active_user(
     # If no user found in database, raise exception
     if user is None:
         logger.warning(f'API user "{username}" not found in database')
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     user = auth_schemas.User(**user.__dict__)
 
     logger.info(
-        f'API user "{user.username}" found in database, '
-        f'is_admin set to "{user.is_admin}"'
+        f'API user "{user.username}" found in database, ' f'is_admin set to "{user.is_admin}"'
     )
 
     return user
@@ -78,7 +75,7 @@ async def admin_user(current_user: auth_schemas.User = Depends(active_user)):
     """
     Get current admin user.
 
-    Args:
+    Parameters:
         current_user (UserCreate): current user.
 
     Returns:
