@@ -15,8 +15,9 @@ BASE_URL = 'http://localhost:8000'
 
 # Obtain access token
 token_response = requests.post(
-    f'{BASE_URL}/get-token', data={'username': Settings.API_ADM_USER,
-                                   'password': Settings.API_ADM_PASSWORD})
+    f'{BASE_URL}/get-token',
+    data={'username': Settings.API_ADM_USER, 'password': Settings.API_ADM_PASSWORD},
+)
 
 access_token = token_response.json()['access_token']
 print(f'Access token: {access_token}')
@@ -33,9 +34,9 @@ response = requests.post(
     json={
         'username': Settings.TEST_PASSWORD,
         'password': Settings.TEST_USER,
-        'is_admin': True
+        'is_admin': True,
     },
-    headers=headers
+    headers=headers,
 )
 response_json = response.json()
 print(f'Response register-api-user: {response_json}')
@@ -45,16 +46,17 @@ print(f'Response register-api-user: {response_json}')
 # Access token for API Test User
 # ------------------------------
 
-# Obtain access token
-token_response = requests.post(
-    f'{BASE_URL}/get-token', data={'username': Settings.TEST_PASSWORD,
-                                   'password': Settings.TEST_USER})
+# # Obtain access token
+# token_response = requests.post(
+#     f"{BASE_URL}/get-token",
+#     data={"username": Settings.TEST_PASSWORD, "password": Settings.TEST_USER},
+# )
 
-access_token = token_response.json()['access_token']
-print(f'Access token for API Test User: {access_token}')
+# access_token = token_response.json()["access_token"]
+# print(f"Access token for API Test User: {access_token}")
 
-# Headers for authorization
-headers = {'Authorization': f'Bearer {access_token}'}
+# # Headers for authorization
+# headers = {"Authorization": f"Bearer {access_token}"}
 
 # ------------------------------
 # Create Database
@@ -64,7 +66,7 @@ headers = {'Authorization': f'Bearer {access_token}'}
 response = requests.post(
     f'{BASE_URL}/create-database',
     json={'db_name': Settings.TEST_DB_NAME},
-    headers=headers
+    headers=headers,
 )
 response_json = response.json()
 print(f'Response create-database: {response_json}')
@@ -80,9 +82,9 @@ response = requests.post(
         'username': Settings.TEST_USER,
         'password': Settings.TEST_PASSWORD,
         'db_name': Settings.TEST_DB_NAME,
-        'privileges': 'SELECT'
+        'privileges': 'SELECT',
     },
-    headers=headers
+    headers=headers,
 )
 response_json = response.json()
 print(f'Response register-db-user: {response_json}')
@@ -91,12 +93,8 @@ print(f'Response register-db-user: {response_json}')
 # Create Table
 # ------------------------------
 
-# Schemfor table
-table_schem= {
-    'id': 'INT PRIMARY KEY',
-    'name': 'VARCHAR(50)',
-    'age': 'INT'
-}
+# Schema for table
+table_schema = {'id': 'INT PRIMARY KEY', 'name': 'VARCHAR(50)', 'age': 'INT'}
 
 # Send POST request to create table
 response = requests.post(
@@ -104,9 +102,9 @@ response = requests.post(
     json={
         'db_name': Settings.TEST_DB_NAME,
         'table_name': Settings.TEST_TABLE_NAME,
-        'table_schema': table_schema
+        'table_schema': table_schema,
     },
-    headers=headers
+    headers=headers,
 )
 response_json = response.json()
 print(f'Response create-table: {response_json}')
@@ -115,29 +113,21 @@ print(f'Response create-table: {response_json}')
 # Insert Data
 # ------------------------------
 
-# Datto insert
+# Data insert
 data_insert = [
-    {
-        'id': 1,
-        'name': 'John Doe',
-        'age': 25
-    },
-    {
-        'id': 2,
-        'name': 'Jane Smith',
-        'age': 30
-    }
+    {'id': 1, 'nan': 'John Doe', 'age': 25},
+    {'id': 2, 'name': 'Jane Smith', 'age': 30},
 ]
 
-# Send POST request to insert datinto table
+# Send POST request to insert data into table
 response = requests.post(
     f'{BASE_URL}/insert-data',
     json={
         'db_name': Settings.TEST_DB_NAME,
         'table_name': Settings.TEST_TABLE_NAME,
-        'data': data_insert
+        'data': data_insert,
     },
-    headers=headers
+    headers=headers,
 )
 response_json = response.json()
 print(f'Response insert-data: {response_json}')
@@ -146,10 +136,10 @@ print(f'Response insert-data: {response_json}')
 # Fetch Table
 # ------------------------------
 
-# Send GET request to retrieve datfrom table
+# Send GET request to retrieve data from table
 response = requests.get(
     f'{BASE_URL}/get-table/{Settings.TEST_DB_NAME}/{Settings.TEST_TABLE_NAME}',
-    headers=headers
+    headers=headers,
 )
 response_json = response.json()
 print(f'Response get-table: {response_json}')
@@ -160,7 +150,7 @@ print(f'Response get-table: {response_json}')
 
 response = requests.delete(
     f'{BASE_URL}/delete-table/{Settings.TEST_DB_NAME}/{Settings.TEST_TABLE_NAME}',
-    headers=headers
+    headers=headers,
 )
 
 response_json = response.json()

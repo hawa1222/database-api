@@ -1,10 +1,12 @@
 from typing import List
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
+from fastapi import status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import auth_schemas, data_schemas
+from app.schemas import auth_schemas
+from app.schemas import data_schemas
 
 # Custom imports
 from app.utils.logging import setup_logging
@@ -44,7 +46,7 @@ async def create_database(db: AsyncSession, database: data_schemas.DatabaseCreat
         await db.execute(query)  # Execute query
         await db.commit()  # Commit transaction
 
-        message = f'Database "{database.db_name}" created successfully'
+        message = f"Database '{database.db_name}' created successfully"
         logger.info(message)  # Log success message
 
         return {"message": message}  # Return success message
@@ -54,13 +56,13 @@ async def create_database(db: AsyncSession, database: data_schemas.DatabaseCreat
 
         # Error message if database already exists
         if "database exists" in str(e).lower() or e.orig.Parameters[0] == 1007:
-            error_message = f'Database "{database.db_name}" already exists: {str(e.orig)}'
+            error_message = f"Database '{database.db_name}' already exists: {str(e.orig)}"
             logger.warning(error_message)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
 
         # Catch all other errors and log error message
         else:
-            error_message = f'Error creating database "{database.db_name}": {str(e)}'
+            error_message = f"Error creating database '{database.db_name}': {str(e)}"
             logger.error(error_message)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
@@ -98,7 +100,7 @@ async def create_db_user(db: AsyncSession, user: auth_schemas.DBUserCreate):
         )  # Construct & execute query: select user from mysql.user
 
         if result.first():  # Check first result to see if user exists
-            error_message = f'DB user "{user.username}" already exists'
+            error_message = f"DB user '{user.username}' already exists"
             logger.warning(error_message)  # Log warning message
 
             await set_user_privileges(db, user)  # Set user privileges
@@ -115,7 +117,7 @@ async def create_db_user(db: AsyncSession, user: auth_schemas.DBUserCreate):
                 },
             )  # Construct & execute query: create user
 
-            success_message = f'DB user "{user.username}" created successfully'
+            success_message = f"DB user '{user.username}' created successfully"
             logger.info(success_message)  # Log success message
 
             await set_user_privileges(db, user)  # Set user privileges
@@ -125,7 +127,7 @@ async def create_db_user(db: AsyncSession, user: auth_schemas.DBUserCreate):
     except Exception as e:
         await db.rollback()  # Rollback transaction
 
-        error_message = f"Error creating or updating DB user " f'"{user.username}": {str(e.orig)}'
+        error_message = f"Error creating or updating DB user " f"'{user.username}': {str(e.orig)}"
         logger.error(error_message)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
@@ -159,7 +161,7 @@ async def set_user_privileges(db: AsyncSession, user: auth_schemas.DBUserCreate)
     await db.execute(text("FLUSH PRIVILEGES"))  # Flush privileges
     await db.commit()  # Commit transaction
 
-    logger.info(f'DB user privilges set to "{user.privileges}" ' f'on "{user.db_name}"')
+    logger.info(f"DB user privileges set to '{user.privileges}' " f"on '{user.db_name}'")
 
 
 # ------------------------------
@@ -194,8 +196,8 @@ async def create_table(db: AsyncSession, table_info: data_schemas.TableCreate):
         await db.commit()  # Commit transaction
 
         message = (
-            f'Table "{table_info.table_name}" created successfully '
-            f'in database "{table_info.db_name}"'
+            f"Table '{table_info.table_name}' created successfully "
+            f"in database '{table_info.db_name}'"
         )
         logger.info(message)  # Log success message
 
@@ -207,14 +209,14 @@ async def create_table(db: AsyncSession, table_info: data_schemas.TableCreate):
         # Error message if table already exists
         if "already exists" in str(e).lower() or e.orig.Parameters[0] == 1050:
             error_message = (
-                f'Table "{table_info.table_name}" already exists '
-                f'in database "{table_info.db_name}": {str(e.orig)}'
+                f"Table '{table_info.table_name}' already exists "
+                f"in database '{table_info.db_name}': {str(e.orig)}"
             )
             logger.warning(error_message)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
         else:
             # Catch all other errors and log error message
-            error_message = f'Error creating table "{table_info.table_name}"' f": {str(e.orig)}"
+            error_message = f"Error creating table '{table_info.table_name}'" f": {str(e.orig)}"
             logger.error(error_message)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
@@ -282,7 +284,7 @@ async def get_table(db: AsyncSession, table_fetch: data_schemas.TableIdentify):
         # Fetch data, convert each row to dictionary, and store in list
         table_data = [row._asdict() for row in result.fetchall()]
 
-        message = f'Fetched table "{table_name}" ' f'from database "{db_name}"'
+        message = f"Fetched table '{table_name}' " f"from database '{db_name}'"
         logger.info(message)  # Log success message
 
         return {
@@ -297,15 +299,15 @@ async def get_table(db: AsyncSession, table_fetch: data_schemas.TableIdentify):
         # Error message if table does not exist
         if "doesn't exist" in str(e).lower():
             error_message = (
-                f'Table "{table_name}" does not exist'
-                f' in database "{db_name}":'
+                f"Table '{table_name}' does not exist"
+                f" in database '{db_name}':"
                 f" {str(e.orig)}"
             )
             logger.error(error_message)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         else:
             # Catch all other errors and log error message
-            error_message = f'Error fetching table "{table_name}"' f": {str(e)}"
+            error_message = f"Error fetching table '{table_name}'" f": {str(e)}"
             logger.error(error_message)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
@@ -315,7 +317,7 @@ async def get_table(db: AsyncSession, table_fetch: data_schemas.TableIdentify):
 # ------------------------------
 
 
-# CRUD function to insert datinto table
+# CRUD function to insert data into table
 async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
     """
     Insert datinto database table.
@@ -341,7 +343,7 @@ async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
         added_count = 0
         updated_count = 0
 
-        # Generate SQL query for datinsertion
+        # Generate SQL query for data insertion
         insert_query = generate_insert_query(
             data_insert.db_name,
             data_insert.table_name,
@@ -350,9 +352,9 @@ async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
 
         # Iterate over each row in data
         for row in data_insert.data:
-            # Dict: column name, datfor insertion, replacing None with NULL
+            # Dict: column name, data for insertion, replacing None with NULL
             data_dict = {key: (value if value is not None else None) for key, value in row.items()}
-            # Execute insert query with prepared dattuple
+            # Execute insert query with prepared data tuple
             result = await db.execute(insert_query, data_dict)
             # Check no. affected rows to determine if row was added or updated
             if result.rowcount == 1:
@@ -360,12 +362,12 @@ async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
             else:
                 updated_count += 1
 
-        await db.commit()  # Commit transaction after all datinserted
+        await db.commit()  # Commit transaction after all data inserted
 
         message = (
-            f"Datinsertion completed for table "
-            f"{data_insert.table_name!r} in database "
-            f"{data_insert.db_name!r}: {added_count} records added, "
+            f"Data insertion completed for table "
+            f"'{data_insert.table_name!r}' in database "
+            f"'{data_insert.db_name!r}': {added_count} records added, "
             f"{updated_count} records updated, "
         )
         logger.info(message)
@@ -378,15 +380,15 @@ async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
         # Error message if table does not exist
         if "doesn't exist" in str(e).lower() or e.orig.Parameters[0] == 1146:
             error_message = (
-                f'Table "{data_insert.table_name}" does not '
-                f'exist in database "{data_insert.db_name}": '
+                f"Table '{data_insert.table_name}' does not "
+                f"exist in database '{data_insert.db_name}': "
                 f"{str(e.orig)}"
             )
             logger.error(error_message)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         else:
             # Catch all other errors and log error message
-            error_message = f"Error during datinsertion: {str(e.orig)}"
+            error_message = f"Error during data insertion: {str(e.orig)}"
             logger.error(error_message)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
@@ -462,8 +464,8 @@ async def delete_table(db: AsyncSession, table_delete: data_schemas.TableIdentif
         await db.execute(query)  # Execute query
         await db.commit()  # Commit transaction
         message = (
-            f'Table "{table_delete.db_name}" deleted successfully '
-            f'from database "{table_delete.db_name}"'
+            f"Table '{table_delete.db_name}' deleted successfully "
+            f"from database '{table_delete.db_name}'"
         )
         logger.info(message)  # Log success message
         return {"message": message}  # Return success message
@@ -474,8 +476,8 @@ async def delete_table(db: AsyncSession, table_delete: data_schemas.TableIdentif
         # Error message if table does not exist
         if "unknown table" in str(e).lower() or e.orig.Parameters[0] in [1146, 1051]:
             error_message = (
-                f'Table "{table_delete.db_name}" does not exist '
-                f'in database "{table_delete.db_name}": '
+                f"Table '{table_delete.db_name}' does not exist "
+                f"in database '{table_delete.db_name}': "
                 f"{str(e.orig)}"
             )
             logger.warning(error_message)

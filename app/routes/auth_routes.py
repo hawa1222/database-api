@@ -1,10 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import authenticate, authorise, hashing, token
+from app.auth import authenticate
+from app.auth import authorise
+from app.auth import hashing
+from app.auth import token
 from app.crud import auth_crud
 from app.database import db_connect
 from app.schemas import auth_schemas
@@ -147,9 +154,7 @@ async def get_access_token(
     logger.info("auth_routes.py ---> get_access_token:")
 
     # Authenticate user
-    user = await authenticate.authenticate_user(
-        db, form_data.username, form_data.password
-    )
+    user = await authenticate.authenticate_user(db, form_data.username, form_data.password)
 
     # Create access token
     access_token = token.create_access_token(data={"sub": user.username})

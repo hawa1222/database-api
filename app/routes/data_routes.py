@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import authorise
 from app.crud import data_crud
 from app.database import db_connect
-from app.schemas import auth_schemas, data_schemas
+from app.schemas import auth_schemas
+from app.schemas import data_schemas
 from app.utils.logging import setup_logging
 
 # Custom imports
@@ -137,9 +140,7 @@ async def create_db_user(
 
 
 # Create new table
-@router.post(
-    "/create-table", status_code=201, summary="Create new table", tags=["Tables"]
-)
+@router.post("/create-table", status_code=201, summary="Create new table", tags=["Tables"])
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def create_table(
     request: Request,
@@ -190,10 +191,8 @@ async def create_table(
     return await data_crud.create_table(db, tables)
 
 
-# Insert datinto table
-@router.post(
-    "/insert-data", status_code=201, summary="Insert datinto table", tags=["Tables"]
-)
+# Insert data into table
+@router.post("/insert-data", status_code=201, summary="Insert data into table", tags=["Tables"])
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def insert_data(
     request: Request,
@@ -251,7 +250,7 @@ async def insert_data(
     return await data_crud.insert_data(db, data_insert)
 
 
-# Get datfrom table
+# Get data from table
 @router.get(
     "/get-table/{db_name}/{table_name}",
     status_code=200,

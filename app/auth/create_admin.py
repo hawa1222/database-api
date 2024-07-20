@@ -47,7 +47,7 @@ async def create_admin_user(db: AsyncSession):
 
     # If admin_user is not None:
     if admin_user:
-        logger.info(f'Admin user "{Settings.API_ADM_USER}" ' f"already exists, skipping creation.")
+        logger.info(f"Admin user '{Settings.API_ADM_USER}' already exists, skipping creation.")
     else:
         # Create admin user
         hashed_password = hashing.hash_password(Settings.API_ADM_PASSWORD)
@@ -57,4 +57,4 @@ async def create_admin_user(db: AsyncSession):
         db.add(admin_user)  # Add user to database
         logger.info("Admin user added to database")
         await db.commit()  # Commit transaction
-        logger.info(f'Admin user "{Settings.API_ADM_USER}" created ' f"successfully.")
+        logger.info(f"Admin user '{Settings.API_ADM_USER}' created successfully.")

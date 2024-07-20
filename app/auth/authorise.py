@@ -1,8 +1,11 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import authenticate, token
+from app.auth import authenticate
+from app.auth import token
 from app.database import db_connect
 from app.schemas import auth_schemas
 
@@ -58,14 +61,12 @@ async def active_user(
 
     # If no user found in database, raise exception
     if user is None:
-        logger.warning(f'API user "{username}" not found in database')
+        logger.warning(f"API user '{username}' not found in database")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     user = auth_schemas.User(**user.__dict__)
 
-    logger.info(
-        f'API user "{user.username}" found in database, ' f'is_admin set to "{user.is_admin}"'
-    )
+    logger.info(f"API user '{user.username}' found in database, is_admin set to '{user.is_admin}'")
 
     return user
 
@@ -90,10 +91,7 @@ async def admin_user(current_user: auth_schemas.User = Depends(active_user)):
 
     # If current user.is_admin is False or None, raise exception
     if not current_user.is_admin:
-        error_message = (
-            "Unauthorised access, admin access required. "
-            f'Current admin status is "{current_user.is_admin}"'
-        )
+        error_message = f"Unauthorised access, admin access required. Current admin status is '{current_user.is_admin}'"
         logger.error(error_message)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_message)
 

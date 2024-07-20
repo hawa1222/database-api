@@ -1,4 +1,5 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import auth_models
@@ -48,7 +49,7 @@ async def create_api_user(db: AsyncSession, user: auth_schemas.UserCreate, hashe
         await db.commit()  # Commit transaction
         await db.refresh(db_user)  # Refresh user object
 
-        message = f'API user "{user.username}" created successfully'
+        message = f"API user '{user.username}' created successfully"
         logger.info(message)
 
         return {"message": message}  # Return success message
@@ -56,7 +57,7 @@ async def create_api_user(db: AsyncSession, user: auth_schemas.UserCreate, hashe
     # If there is an error creating user, log error and raise exception
     except Exception as e:
         db.rollback()  # Rollback transaction
-        error_message = f'Error creating API user "{user.username}": {str(e)}'
+        error_message = f"Error creating API user '{user.username}': {str(e)}"
         logger.error(error_message)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message

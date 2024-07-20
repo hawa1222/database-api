@@ -1,7 +1,11 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 
-from fastapi import HTTPException, status
-from jose import JWTError, jwt
+from fastapi import HTTPException
+from fastapi import status
+from jose import JWTError
+from jose import jwt
 
 from app.utils.logging import setup_logging
 
@@ -42,16 +46,16 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes
     logger.info("token.py ---> create_access_token:")
 
     try:
-        to_encode = data.copy()  # Copy datto encode
+        to_encode = data.copy()  # Copy data to encode
         # Set expiration time for token using current time
         expire = datetime.now(timezone.utc) + expires_delta
-        to_encode.update({"exp": expire})  # Update datto encode
+        to_encode.update({"exp": expire})  # Update data to encode
         # Encode token using data, secret key and algorithm
         encoded_jwt = jwt.encode(
             to_encode, Settings.TOKEN_SECRET_KEY, algorithm=Settings.TOKEN_ALGORITHM
         )
 
-        logger.info('Encoding complete. Access token created for API user ' f'"{data.get('sub')}"')
+        logger.info("Encoding complete. Access token created for API user " f"'{data.get('sub')}'")
 
         return {"access_token": encoded_jwt, "token_type": "bearer"}
 
@@ -95,7 +99,7 @@ def decode_token(token: str):
             logger.error("Invalid token: No username found")
             raise credentials_exception
 
-        logger.info(f'Token is valid. Username "{username}" ' f"extracted from token")
+        logger.info(f"Token is valid. Username '{username}' extracted from token")
 
     # If token is invalid, raise exception
     except JWTError:

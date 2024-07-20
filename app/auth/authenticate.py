@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.ext.
+
 from app.auth import hashing
 from app.models import auth_models
 
@@ -37,7 +37,7 @@ async def check_user_exists(db: AsyncSession, username: str):
 
     """
 
-    logger.info('authenticate.py ---> check_user_exists:')
+    logger.info("authenticate.py ---> check_user_exists:")
 
     try:
         # Create query to retrieve user by their username
@@ -47,17 +47,17 @@ async def check_user_exists(db: AsyncSession, username: str):
 
         # If user is None, log message and return None
         if not user:
-            logger.info(f'API user "{username}" not found')
+            logger.info(f"API user '{username}' not found'")
             return None
 
-        logger.info(f'API user "{username}" details found')
+        logger.info(f"API user'{username}' details found")
 
         return user  # Return user object
 
     # If there is an error retrieving user, log error and raise exception
     except Exception as e:
         await db.rollback()  # Rollback transaction
-        error_message = f'Error retrieving API user "{username}": {str(e)}'
+        error_message = f"Error retrieving API user '{username}': {str(e)}"
         logger.error(error_message)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
@@ -83,7 +83,7 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
         HTTPException (401): authentication fails due to invalid credentials.
     """
 
-    logger.info('authenticate.py ---> authenticate_user:')
+    logger.info("authenticate.py ---> authenticate_user:")
 
     # Check if user exists in database
     user = await check_user_exists(db, username)
@@ -94,6 +94,6 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
         return user
 
     # If authentication fails, log message and raise generic HTTPException
-    message = 'Invalid username or password'
+    message = "Invalid username or password"
     logger.error(message)
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=message)
