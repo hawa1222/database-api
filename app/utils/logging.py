@@ -6,8 +6,6 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-from constants import FileDirectory
-
 from config import Settings
 
 
@@ -53,7 +51,7 @@ def setup_logging():
     console_handler.setFormatter(formatter)
 
     # Create file handler with log rotation
-    log_directory = os.path.join(FileDirectory.ROOT_DIRECTORY, "logs")
+    log_directory = os.path.join(Settings.ROOT_DIRECTORY, "logs")
     os.makedirs(log_directory, exist_ok=True)  # Create logs directory
     log_file = os.path.join(log_directory, "logs.txt")  # Log file path
     file_handler = RotatingFileHandler(log_file, maxBytes=10485760, backupCount=10)
