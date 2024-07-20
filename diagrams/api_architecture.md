@@ -1,5 +1,5 @@
 ```mermaid
-flowchart BT
+flowchart LR
 
     subgraph UI
         A0[/JavaScript/]
