@@ -16,44 +16,44 @@ logger = setup_logging()
 
 
 def hash_password(password):
-    '''
+    """
     Hashes given password using bcrypt.
 
-    Args:
+    Parameters:
         password (str): password to be hashed.
 
     Returns:
         str: hashed password.
-    '''
+    """
 
-    logger.info('hashing.py ---> hash_password:')
+    logger.info("hashing.py ---> hash_password:")
 
     hashed_password = bcrypt.hash(password)
-    logger.info('Password hashed')
+    logger.info("Password hashed")
 
     return hashed_password
 
 
 def verify_password(plain_password, hashed_password):
-    '''
+    """
     Verify if plain password matches hashed password.
 
-    Args:
+    Parameters:
         plain_password (str): plain password to verify.
         hashed_password (str): hashed password to compare against.
 
     Returns:
         bool: True if plain password matches hashed password,
         False otherwise.
-    '''
+    """
 
-    logger.info('hashing.py ---> verify_password:')
+    logger.info("hashing.py ---> verify_password:")
 
     password_verified = bcrypt.verify(plain_password, hashed_password)
 
     if password_verified:
-        logger.info('Password verified')
+        logger.info("Password verified")
     else:
-        logger.error('Password incorrect')
+        logger.error("Password incorrect")
 
     return password_verified

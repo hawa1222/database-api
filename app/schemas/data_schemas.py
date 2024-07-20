@@ -1,31 +1,27 @@
-from pydantic import BaseModel, Field
-from typing import Any, Dict, List
+from typing import Any
+from typing import Dict
+from typing import List
+
+from pydantic import BaseModel
+from pydantic import Field
 
 # ------------------------------
 # Field Validators
 # ------------------------------
 
-'''
+"""
 Define reusable field validators
 
 1. Starts with lowercase letter ([a-z])
 2. Followed by any combination of lowercase letters,
 digits, or underscores ([a-z0-9_]*)
 3. Does not contain any uppercase letters, spaces, or special characters
-'''
+"""
 
-db_name_field = Field(
-    default='testdb',
-    pattern=r'^[a-z][a-z0-9_]*$',
-    min_length=1,
-    max_length=30
-)
+db_name_field = Field(default="testdb", pattern=r"^[a-z][a-z0-9_]*$", min_length=1, max_length=30)
 
 table_name_field = Field(
-    default='users',
-    pattern=r'^[a-z][a-z0-9_]*$',
-    min_length=1,
-    max_length=30
+    default="users", pattern=r"^[a-z][a-z0-9_]*$", min_length=1, max_length=30
 )
 
 # ------------------------------

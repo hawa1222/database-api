@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
 
 # ------------------------------
 # User
@@ -8,25 +10,23 @@ from typing import Optional
 
 # Base User Schema
 class DBUserCreate(BaseModel):
-    '''
+    """
     Represents database user creation request.
-    '''
+    """
 
-    host: str = Field('localhost', min_length=1, max_length=255)
-    username: str = Field('testing', min_length=1, max_length=100)
+    host: str = Field("localhost", min_length=1, max_length=255)
+    username: str = Field("testing", min_length=1, max_length=100)
     password: str = Field(..., min_length=1, max_length=100)
-    privileges: str = Field('SELECT', min_length=1, max_length=100)
+    privileges: str = Field("SELECT", min_length=1, max_length=100)
     db_name: str = Field(
-        default='testdb',
-        pattern=r'^[a-z][a-z0-9_]*$',
-        min_length=1,
-        max_length=30
+        default="testdb", pattern=r"^[a-z][a-z0-9_]*$", min_length=1, max_length=30
     )
 
 
 # ------------------------------
 # Authentication and Authorization
 # ------------------------------
+
 
 class User(BaseModel):
     id: int
@@ -43,4 +43,4 @@ class UserCreate(BaseModel):
 
 class Token(BaseModel):
     access_token: str
-    token_type: str = 'bearer'
+    token_type: str = "bearer"
