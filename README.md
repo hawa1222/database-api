@@ -24,7 +24,7 @@ The project consists of the following components:
 
 - **Pydantic**: A Python library for data validation and settings management using Python type annotations. It is used to define and validate request and response models, ensuring data integrity and consistency.
 
-![Architecture Diagram](./diagrams/api_architecture.md)
+![Architecture Diagram](./diagrams/architecture.png)
 
 ## API Components
 
@@ -51,7 +51,7 @@ To access protected endpoints, you need to obtain an access token by providing v
 
 ### Logic Flow
 
-![Endpoint Diagram](./diagrams/route_logic.md)
+![Endpoint Diagram](./diagrams/api_routes.png)
 
 For detailed information about request and response formats, refer to the API documentation once locally deployed at [http://localhost:8000/docs](http://localhost:8000/docs/).
 
