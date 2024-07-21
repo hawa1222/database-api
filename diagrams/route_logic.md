@@ -1,4 +1,11 @@
 ```mermaid
+---
+config:
+  theme: neutral
+  themeVariables:
+    primaryColor: "#00ff00"
+    edgeLabelTextColor: "#000000"
+---
 sequenceDiagram
     autonumber off
     
@@ -14,7 +21,7 @@ sequenceDiagram
     rect rgba(0, 0, 0, 0.1)
     Note over Client,DB: Dependency
 
-    Client->>+Router: POST /`<br/>`register_api_user()`<br/>`create_db_user()`<br/>`create_db()`<br/>`create_table()`<br/>`insert_data()`<br/>`DELETE /`<br/>`delete_table()
+    Client->>+Router: POST /<br/>register_api_user()<br/>create_db_user()<br/>create_db()<br/>create_table()<br/>insert_data()<br/>DELETE /<br/>delete_table()
     Note right of Client: access_token
     Router->>+Permissions: admin_user()
     Permissions->>+Permissions: active_user(access_token)
@@ -60,7 +67,7 @@ sequenceDiagram
     Router-->>-Client: API user created successfully
     
     Client->>+Router: POST /get-token
-    Note right of Client: OAUTH2 form_data
+    Note right of Client: OAuth2 form_data
     Router->>+AuthUsers: authenticate_user(username, password)
     AuthUsers->>AuthUsers: check_user_exists(username)
     AuthUsers->>+DB: query api_users table

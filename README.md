@@ -51,6 +51,20 @@ To access protected endpoints, you need to obtain an access token by providing v
 
 ### Logic Flow
 
+The API follows a structured logic flow to handle incoming requests and perform the necessary operations. It includes authentication, permission checks, database operations, and response generation. The logic is separated into two main components: Dependency and Main.
+
+**Dependency Logic** (for all endpoints):
+
+- Validate the access token and extract the user's username.
+- Verify the user's existence and permissions.
+
+**Main Logic** (for `register_api_user` endpoint):
+
+- Confirm the user does not already exist.
+- Hash the user's password and create a new API user.
+
+The diagram below illustrates dependency logic flow for all API endpoints and main logic flow for `register_api_user` and `get-token` endpoints:
+
 ![Endpoint Diagram](./diagrams/api_routes.png)
 
 For detailed information about request and response formats, refer to the API documentation once locally deployed at [http://localhost:8000/docs](http://localhost:8000/docs/).
