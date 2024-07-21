@@ -39,13 +39,13 @@ To access protected endpoints, you need to obtain an access token by providing v
 
 #### Database Management
 
-- **`POST /create-database`**: Create a new database.
+- **`POST /create-database`**: Create a new database (admin only).
 - **`POST /create-db-user`**: Create a new database user (admin only).
 
 #### Data Management
 
-- **`POST /create-table`**: Create a new table in a database.
-- **`GET /get-table/{db_name}/{table_name}`**: Get data from a table (admin only).
+- **`POST /create-table`**: Create a new table in a database (admin only).
+- **`GET /get-table/{db_name}/{table_name}`**: Get data from a table.
 - **`DELETE /delete-table/{db_name}/{table_name}`**: Delete a table from a database (admin only).
 - **`POST /insert-data`**: Insert data into a table (admin only).
 
