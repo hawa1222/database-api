@@ -1,4 +1,5 @@
 import time
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -13,15 +14,12 @@ from app.database import db_connect
 from app.models import auth_models
 from app.routes import auth_routes
 from app.routes import data_routes
-
-# Custom imports
 from app.utils.logging import setup_logging
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logging
 logger = setup_logging()
 
 # ------------------------------
@@ -29,58 +27,48 @@ logger = setup_logging()
 # ------------------------------
 
 
-# Define lifespan event handler FastAPI application
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    Context manager for lifespan of application.
+
+    Context manager responsible for setting up and shutting down application.
+    Creates necessary database tables, creates admin user, and disposes of database engine.
+
+    Parameters:
+        app (FastAPI): FastAPI application instance.
+    """
     try:
-        logger.info("Starting up app")
+        logger.debug("Starting up app...")
 
         async with db_connect.engine.begin() as conn:
             await conn.run_sync(auth_models.Base.metadata.create_all, checkfirst=True)
-            logger.info(f'Table "{auth_models.User.__tablename__}" created')
+            logger.debug(f"Table '{auth_models.User.__tablename__}' created")
 
-            # Create new session and pass to create_admin_user
-            async with db_connect.SessionLocal() as db:
-                try:
-                    await create_admin.create_admin_user(db)
-                finally:
-                    await db.close()
+        async with db_connect.SessionLocal() as db:
+            await create_admin.create_admin_user(db)
 
-        logger.info("App started successfully")
+        logger.debug("App started successfully")
 
         yield
 
     finally:
-        logger.info("Shutting down app and disposing of engine")
+        logger.debug("Shutting down app and disposing of engine")
         await db_connect.engine.dispose()
-        logger.info("App shut down successfully")
+        logger.debug("App shut down successfully")
 
 
-# Create an instance of FastAPI class with lifespan dependency
 app = FastAPI(lifespan=lifespan)
+
 
 # ------------------------------
 # Rate limiting configuration
 # ------------------------------
 
-"""
-Create Limiter instance
-- key_func specifies function that returns unique identifier for each client
-- get_remote_address used to identify clients based on their IP address
-"""
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_remote_address)  # Rate limiter instance for IP address
 
-"""
-Attach Limiter instance to FastAPI application's state, allowing
-Limiter to be accessed and used throughout application
-"""
-app.state.limiter = limiter
+app.state.limiter = limiter  # Add rate limiter to app state
 
-"""
-Register custom exception handler for RateLimitExceeded exception
-- this handler is called when client exceeds rate limit
-- returns  appropriate error response to client
-"""
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ------------------------------
@@ -100,12 +88,10 @@ app.include_router(data_routes.router)
 # ------------------------------
 
 
-# Middleware decorators used to execute code before & after each request
 @app.middleware("http")
 async def log_requests_and_performance(request: Request, call_next):
     """
-    Middleware function to log incoming requests,
-    outgoing responses, and execution time.
+    Middleware function to log incoming requests, outgoing responses, and execution time.
 
     Parameters:
         request (Request): incoming request object.
@@ -116,13 +102,11 @@ async def log_requests_and_performance(request: Request, call_next):
     """
     start_time = time.perf_counter()  # perf_counter: higher precision timing
 
-    # Log incoming request
-    logger.info(f"Incoming request: {request.method} {request.url}")
+    logger.debug(f"Incoming request: {request.method} {request.url}")
 
     try:
         response = await call_next(request)
     except Exception as e:
-        # Log any exceptions that occur during request processing
         logger.error(
             f"Error processing request: {request.method} " f"{request.url}, Error: {str(e)}"
         )
@@ -131,11 +115,9 @@ async def log_requests_and_performance(request: Request, call_next):
     end_time = time.perf_counter()
     execution_time = end_time - start_time
 
-    # Log outgoing response and execution time
-    logger.info(
+    logger.debug(
         f"Outgoing response: {response.status_code}, Endpoint: "
-        f"{request.method} {request.url.path},  Execution Time: "
-        f"{execution_time:.4f} seconds"
+        f"{request.method} {request.url.path},  Execution Time: {execution_time:.4f} seconds"
     )
 
     return response

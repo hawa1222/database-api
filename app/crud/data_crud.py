@@ -1,4 +1,4 @@
-from typing import List
+import math
 
 from fastapi import HTTPException
 from fastapi import status
@@ -7,15 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas import auth_schemas
 from app.schemas import data_schemas
-
-# Custom imports
 from app.utils.logging import setup_logging
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logger
 logger = setup_logging()
 
 # ------------------------------
@@ -23,125 +20,109 @@ logger = setup_logging()
 # ------------------------------
 
 
-# CRUD function to create new database
 async def create_database(db: AsyncSession, database: data_schemas.DatabaseCreate):
     """
     Create new database.
 
     Parameters:
-        db (AsyncSession): database session.
-        database (data_schemas.DatabaseCreate): name of database to create.
+        db (AsyncSession): Async database session.
+        database (Pydantic model): Database object containing db_name.
 
     Returns:
-        dict: dictionary containing success or error message.
+        dict: Dictionary containing success message.
 
     Raises:
-        HTTPException: If database already exists or error occurs.
+        HTTPException (400): If database already exists.
+        HTTPException (500): If error creating database.
     """
 
-    logger.info("data_crud.py ---> create_database:")
+    logger.debug("Creating database...")
 
     try:
-        query = text(f"CREATE DATABASE {database.db_name}")  # Construct query
-        await db.execute(query)  # Execute query
-        await db.commit()  # Commit transaction
+        create_db_query = text(f"CREATE DATABASE {database.db_name}")
+        await db.execute(create_db_query)
+        await db.commit()
 
         message = f"Database '{database.db_name}' created successfully"
-        logger.info(message)  # Log success message
+        logger.info(message)
 
-        return {"message": message}  # Return success message
+        return {"message": message}
 
     except Exception as e:
-        await db.rollback()  # Rollback transaction
+        await db.rollback()
 
-        # Error message if database already exists
-        if "database exists" in str(e).lower() or e.orig.Parameters[0] == 1007:
-            error_message = f"Database '{database.db_name}' already exists: {str(e.orig)}"
-            logger.warning(error_message)
+        if "1007" in str(e):
+            error_message = f"Database '{database.db_name}' already exists"
+            logger.warning(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
 
-        # Catch all other errors and log error message
         else:
-            error_message = f"Error creating database '{database.db_name}': {str(e)}"
-            logger.error(error_message)
+            error_message = f"Error occurred creating database '{database.db_name}'"
+            logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
             )
 
 
-# ------------------------------
-
-
-# CRUD function to create new database user
 async def create_db_user(db: AsyncSession, user: auth_schemas.DBUserCreate):
     """
     Create database user if doesn't exist, or update user's privileges if
     already exists.
 
     Parameters:
-        db (AsyncSession): database session.
-        user (auth_schemas.DBUserCreate): user object containing host,
+        db (AsyncSession): Async database session.
+        user (Pydantic model): Database user object containing host,
         username, password, db_name, and privileges.
 
     Returns:
-        dict: dictionary containing success or error message.
+        dict: Dictionary containing sucess message.
 
     Raises:
-        HTTPException: If there is error creating or updating DB user.
+        HTTPException (500): If error creating or updating DB user.
     """
 
-    logger.info("data_crud.py ---> create_db_user:")
+    logger.debug("Creating database user...")
 
     try:
-        result = await db.execute(
-            text("""SELECT User FROM mysql.user WHERE
-                 User = :username AND Host = :host"""),
-            {"username": user.username, "host": user.host},
-        )  # Construct & execute query: select user from mysql.user
+        create_query = text("""SELECT User FROM mysql.user WHERE
+                                 User = :username AND Host = :host""")
+        result = await db.execute(create_query, {"username": user.username, "host": user.host})
 
-        if result.first():  # Check first result to see if user exists
+        if result.first():
             error_message = f"DB user '{user.username}' already exists"
-            logger.warning(error_message)  # Log warning message
+            logger.warning(error_message)
+            await set_user_privileges(db, user)
 
-            await set_user_privileges(db, user)  # Set user privileges
-
-            return {"message": error_message}  # Return warning message
+            return {"message": error_message}
 
         else:
+            create_query = text("CREATE USER :username@:host IDENTIFIED BY :password")
             await db.execute(
-                text("CREATE USER :username@:host IDENTIFIED BY :password"),
-                {
-                    "username": user.username,
-                    "host": user.host,
-                    "password": user.password,
-                },
-            )  # Construct & execute query: create user
-
+                create_query,
+                {"username": user.username, "host": user.host, "password": user.password},
+            )
             success_message = f"DB user '{user.username}' created successfully"
-            logger.info(success_message)  # Log success message
+            logger.info(success_message)
+            await set_user_privileges(db, user)
 
-            await set_user_privileges(db, user)  # Set user privileges
-
-            return {"message": success_message}  # Return success message
+            return {"message": success_message}
 
     except Exception as e:
-        await db.rollback()  # Rollback transaction
-
-        error_message = f"Error creating or updating DB user " f"'{user.username}': {str(e.orig)}"
-        logger.error(error_message)
+        await db.rollback()
+        error_message = f"Error occurred creating DB user '{user.username}'"
+        logger.error(error_message + f": {str(e.orig)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
         )
 
 
-# Function to create SQL query for setting user privileges
 async def set_user_privileges(db: AsyncSession, user: auth_schemas.DBUserCreate):
     """
     Sets privileges for user on specific database.
 
     Parameters:
-        db (AsyncSession): database session.
-        user (auth_schemas.DBUserCreate): user object containing host,
+        db (AsyncSession): Async database session.
+        user (Pydantic model): User object containing host,
         username, password, db_name, and privileges.
 
     Returns:
@@ -151,141 +132,125 @@ async def set_user_privileges(db: AsyncSession, user: auth_schemas.DBUserCreate)
         None
     """
 
-    logger.info("data_crud.py ---> set_user_privileges:")
+    logger.debug("Setting user privileges...")
 
-    # Set user privileges on specified database
-    await db.execute(
-        text(f"GRANT {user.privileges} ON {user.db_name}.* TO :username@:host"),
-        {"username": user.username, "host": user.host},
-    )  # Construct & execute query: grant privileges
-    await db.execute(text("FLUSH PRIVILEGES"))  # Flush privileges
-    await db.commit()  # Commit transaction
+    create_query = text(f"GRANT {user.privileges} ON {user.db_name}.* TO :username@:host")
+    await db.execute(create_query, {"username": user.username, "host": user.host})
+    await db.execute(text("FLUSH PRIVILEGES"))
+    await db.commit()
 
-    logger.info(f"DB user privileges set to '{user.privileges}' " f"on '{user.db_name}'")
+    logger.debug(f"DB user privileges set to '{user.privileges}' on '{user.db_name}'")
 
 
-# ------------------------------
-
-
-# CRUD function to create new table in database
 async def create_table(db: AsyncSession, table_info: data_schemas.TableCreate):
     """
     Create table in database.
 
     Parameters:
-        db (AsyncSession): database session.
-        table_info (data_schemas.TableCreate): table_name, db_name, and
-        table_schema, which contains field names and dattypes/constraints.
+        db (AsyncSession): Async database session.
+        table_info (Pydantic model): Table object containing db_name,
+        table_name, and table_schema, which contains field names and data types/constraints.
 
     Returns:
-        dict: dictionary containing success or error message.
+        dict: Dictionary containing success message.
 
     Raises:
-        HTTPException: If table already exists or if error creating table.
+        HTTPException (400): If table already exists.
+        HTTPException (500): If error creating table.
     """
 
-    logger.info("data_crud.py ---> create_table:")
+    logger.debug("Creating table...")
 
     try:
         db_tb_name = f"`{table_info.db_name}`.`{table_info.table_name}`"
         fields = table_info.table_schema  # Create query parameters
 
-        # Generate SQL query for creating table
         create_table_query = generate_create_table_query(db_tb_name, fields)
-        await db.execute(create_table_query)  # Execute query
-        await db.commit()  # Commit transaction
+        await db.execute(create_table_query)
+        await db.commit()
 
         message = (
             f"Table '{table_info.table_name}' created successfully "
             f"in database '{table_info.db_name}'"
         )
-        logger.info(message)  # Log success message
+        logger.info(message)
 
-        return {"message": message}  # Return success message
+        return {"message": message}
 
     except Exception as e:
-        await db.rollback()  # Rollback transaction
+        await db.rollback()
 
-        # Error message if table already exists
-        if "already exists" in str(e).lower() or e.orig.Parameters[0] == 1050:
-            error_message = (
-                f"Table '{table_info.table_name}' already exists "
-                f"in database '{table_info.db_name}': {str(e.orig)}"
-            )
-            logger.warning(error_message)
+        if "1050" in str(e).lower():
+            error_message = f"Table '{table_info.table_name}' already exists in database '{table_info.db_name}'"
+            logger.warning(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
         else:
-            # Catch all other errors and log error message
-            error_message = f"Error creating table '{table_info.table_name}'" f": {str(e.orig)}"
-            logger.error(error_message)
+            error_message = f"Error occurred creating table '{table_info.table_name}'"
+            logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
             )
 
 
-# Function to generate SQL query to create table
 def generate_create_table_query(db_tb_name, fields):
     """
     Generate SQL query to create table in database.
 
     Parameters:
-        db_tb_name (str): name of table to be created.
-        fields (dict): dictionary containing field names and their
-        corresponding dattypes / constraints.
+        db_tb_name (str): Name of table to be created.
+        fields (dict): Dictionary containing field names and their
+        corresponding data types/constraints.
 
     Returns:
         str: SQL query to create table.
 
     Example:
-        >>> fields = {'id': 'INT', 'name': 'VARCHAR(255)', 'age': 'INT'}
-        >>> generate_create_table_query('users', fields)
+        >>> fields = {"id": "INT", "name": "VARCHAR(255)", "age": "INT"}
+        >>> generate_create_table_query("users", fields)
         'CREATE TABLE users (`id` INT, `name` VARCHAR(255), `age` INT)'
     """
 
-    logger.info("data_crud.py ---> generate_create_table_query:")
+    logger.debug("Generating create table query...")
 
-    # Build SQL CREATE TABLE statement with field definitions
-    field_definitions = ", ".join([f"`{name}` {type}" for name, type in fields.items()])
+    field_definitions = ", ".join(
+        [f"`{name}` {type}" for name, type in fields.items()]
+    )  # Format field names and data types/constraints
     query = text(f"CREATE TABLE {db_tb_name} ({field_definitions})")
 
-    logger.info("Generated create table query")  # Log success message
+    logger.debug("Generated create table query")
 
-    return query  # Return SQL query
-
-
-# ------------------------------
+    return query
 
 
-# CRUD function to fetch table from database
 async def get_table(db: AsyncSession, table_fetch: data_schemas.TableIdentify):
     """
     Fetches table from database.
 
     Parameters:
-        db (AsyncSession): database session.
-        table_fetch (data_schemas.TableIdentify): db_name and table_name
-        to fetch.
+        db (AsyncSession): Async database session.
+        table_fetch (Pydantic model): Table object containing db_name and table_name
 
     Returns:
-        dict: Dictionary containing table name and its dator error message.
+        dict: Dictionary containing table name and data.
 
     Raises:
-        HTTPException: If table does not exist or
-            error occurs while fetching table.
+        HTTPException (404): If table does not exist.
+        HTTPException (500): If error fetching table.
     """
 
-    logger.info("data_crud.py ---> get_table:")
+    logger.debug("Fetching table...")
 
     try:
         db_name = table_fetch.db_name
         table_name = table_fetch.table_name
         query = text(f"SELECT * FROM `{db_name}`.`{table_name}`")
-        result = await db.execute(query)  # Execute query
-        # Fetch data, convert each row to dictionary, and store in list
-        table_data = [row._asdict() for row in result.fetchall()]
+        result = await db.execute(query)
+        table_data = [
+            row._asdict() for row in result.fetchall()
+        ]  # Fetch data, convert each row to dictionary, and store in list
 
         message = f"Fetched table '{table_name}' " f"from database '{db_name}'"
-        logger.info(message)  # Log success message
+        logger.info(message)
 
         return {
             table_name: data_schemas.TableData(
@@ -294,66 +259,67 @@ async def get_table(db: AsyncSession, table_fetch: data_schemas.TableIdentify):
         }
 
     except Exception as e:
-        await db.rollback()  # Rollback transaction
+        await db.rollback()
 
-        # Error message if table does not exist
         if "doesn't exist" in str(e).lower():
-            error_message = (
-                f"Table '{table_name}' does not exist"
-                f" in database '{db_name}':"
-                f" {str(e.orig)}"
-            )
-            logger.error(error_message)
+            error_message = f"Table '{table_name}' does not exist in database '{db_name}'"
+            logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         else:
-            # Catch all other errors and log error message
-            error_message = f"Error fetching table '{table_name}'" f": {str(e)}"
-            logger.error(error_message)
+            error_message = f"Error occurred fetching table '{table_name}'"
+            logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
             )
 
 
-# ------------------------------
-
-
-# CRUD function to insert data into table
-async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
+def handle_nan_values(row):
     """
-    Insert datinto database table.
+    Handle NaN and None values in row of data.
 
     Parameters:
-        db (AsyncSession): database session.
-        data_insert (data_schemas.TableData): db_name, table_name, and data
-        to be inserted.
+        row (Dict[str, Any]): Dictionary representing a row of data.
 
     Returns:
-        dict: dictionary containing message with number of
-        records added and updated or an error message.
+        Dict[str, Any]: Row with NaN and None values handled.
+    """
+    return {
+        key: (None if value is None or (isinstance(value, float) and math.isnan(value)) else value)
+        for key, value in row.items()
+    }
+
+
+async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
+    """
+    Insert data into database table.
+
+    Parameters:
+        db (AsyncSession): Async database session.
+        data_insert (Pydantic model): TableData object containing db_name,
+        table_name, and data
+
+    Returns:
+        dict: Dictionary containing message with number of
+        records added/unchanged and updated.
 
     Raises:
-        HTTPException: If table does not exist or if there is an error
-        during datinsertion.
+        HTTPException (404): If table does not exist.
+        HTTPException (500): If error inserting data.
     """
 
-    logger.info("data_crud.py ---> insert_data:")
+    logger.debug("Inserting data into table...")
 
     try:
-        # Initialise counters for added and updated records
-        added_count = 0
-        updated_count = 0
+        added_count = 0  # Counter for no. records added
+        updated_count = 0  # Counter for no. records updated
 
-        # Generate SQL query for data insertion
         insert_query = generate_insert_query(
-            data_insert.db_name,
-            data_insert.table_name,
-            list(data_insert.data[0].keys()),
+            data_insert.db_name, data_insert.table_name, list(data_insert.data[0].keys())
         )
 
-        # Iterate over each row in data
-        for row in data_insert.data:
-            # Dict: column name, data for insertion, replacing None with NULL
-            data_dict = {key: (value if value is not None else None) for key, value in row.items()}
+        for row in data_insert.data:  # Iterate over each row in data
+            data_dict = handle_nan_values(row)  # Handle NaN values and None
+
             # Execute insert query with prepared data tuple
             result = await db.execute(insert_query, data_dict)
             # Check no. affected rows to determine if row was added or updated
@@ -362,64 +328,56 @@ async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
             else:
                 updated_count += 1
 
-        await db.commit()  # Commit transaction after all data inserted
+        await db.commit()
 
         message = (
-            f"Data insertion completed for table "
-            f"'{data_insert.table_name!r}' in database "
-            f"'{data_insert.db_name!r}': {added_count} records added, "
-            f"{updated_count} records updated, "
+            f"Data insertion completed for table '{data_insert.table_name}' in database "
+            f"'{data_insert.db_name}': {added_count} records added or unchanged, {updated_count} records updated"
         )
         logger.info(message)
 
         return {"message": message}  # Return no. records added and updated
 
     except Exception as e:
-        await db.rollback()  # Rollback transaction
+        await db.rollback()
 
-        # Error message if table does not exist
-        if "doesn't exist" in str(e).lower() or e.orig.Parameters[0] == 1146:
-            error_message = (
-                f"Table '{data_insert.table_name}' does not "
-                f"exist in database '{data_insert.db_name}': "
-                f"{str(e.orig)}"
-            )
-            logger.error(error_message)
+        if "1146" in str(e).lower():
+            error_message = f"Table '{data_insert.table_name}' does not exist in database '{data_insert.db_name}'"
+            logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         else:
-            # Catch all other errors and log error message
-            error_message = f"Error during data insertion: {str(e.orig)}"
-            logger.error(error_message)
+            error_message = f"Error occurred inserting data into table '{data_insert.table_name}'"
+            logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
             )
 
 
-# Function to generate INSERT INTO SQL query + ON DUPLICATE KEY UPDATE clause
-def generate_insert_query(db_name: str, table_name: str, column_names: List[str]) -> str:
+def generate_insert_query(db_name: str, table_name: str, column_names: list[str]) -> str:
     """
     Generate INSERT INTO SQL query with ON DUPLICATE KEY UPDATE clause.
 
     Parameters:
-        db_name (str): name of database.
-        table_name (str): name of table.
-        column_names (List[str]): list of column names.
+        db_name (str): Name of database.
+        table_name (str): Name of table.
+        column_names (List[str]): List of column names.
 
     Returns:
         str: complete INSERT INTO SQL query.
 
     Example:
-        >>> generate_insert_query('mydb', 'mytable', ['col1', 'col2', 'col3'])
+        >>> generate_insert_query("mydb", "mytable", ["col1", "col2", "col3"])
         "INSERT INTO `mydb`.`mytable` (col1, col2, col3) VALUES
         (:col1, :col2, :col3) ON DUPLICATE KEY UPDATE col1 = VALUES(col1),
         col2 = VALUES(col2), col3 = VALUES(col3)"
     """
 
-    logger.info("data_crud.py ---> generate_insert_query:")
+    logger.debug("Generating insert query...")
 
-    # Construct column names and placeholders for INSERT query
-    columns = ", ".join(column_names)
-    values_placeholders = ", ".join([":" + col for col in column_names])
+    columns = ", ".join(column_names)  # Concatenate column names
+    values_placeholders = ", ".join(
+        [":" + col for col in column_names]
+    )  # Construct placeholders for values
 
     update_clause = text(
         ", ".join([f"{col} = VALUES({col})" for col in column_names])
@@ -430,63 +388,51 @@ def generate_insert_query(db_name: str, table_name: str, column_names: List[str]
         {values_placeholders}) ON DUPLICATE KEY UPDATE {update_clause}"""
     )  # Construct complete INSERT INTO SQL query
 
-    logger.info("Generated insert query")  # Log success message
+    logger.debug("Generated insert query")
 
-    return query  # Return SQL query
-
-
-# ------------------------------
+    return query
 
 
-# CRUD function to delete table from database
 async def delete_table(db: AsyncSession, table_delete: data_schemas.TableIdentify):
     """
     Delete table from database.
 
     Parameters:
-        db (AsyncSession): database session.
-        table_delete (data_schemas.TableIdentify): db_name and table_name
-        to delete.
+        db (AsyncSession): Async database session.
+        table_delete (Pydantic model): Table object containing db_name and table_name.
 
     Returns:
-        dict: dictionary containing success message or error message.
+        dict: Dictionary containing success message.
 
     Raises:
-        HTTPException: If table does not exist or error occurs.
+        HTTPException: (404): If table does not exist.
+        HTTPException: (500): If error deleting table.
     """
 
-    logger.info("data_crud.py ---> delete_table:")
+    logger.debug("Deleting table...")
 
     try:
-        query = text(
-            f"DROP TABLE {table_delete.db_name}.{table_delete.table_name}"
-        )  # SQL query to delete table
-        await db.execute(query)  # Execute query
-        await db.commit()  # Commit transaction
+        create_query = text(f"DROP TABLE {table_delete.db_name}.{table_delete.table_name}")
+        await db.execute(create_query)
+        await db.commit()
         message = (
             f"Table '{table_delete.db_name}' deleted successfully "
             f"from database '{table_delete.db_name}'"
         )
-        logger.info(message)  # Log success message
-        return {"message": message}  # Return success message
+        logger.info(message)
+        return {"message": message}
 
     except Exception as e:
-        await db.rollback()  # Rollback transaction
+        await db.rollback()
 
-        # Error message if table does not exist
-        if "unknown table" in str(e).lower() or e.orig.Parameters[0] in [1146, 1051]:
-            error_message = (
-                f"Table '{table_delete.db_name}' does not exist "
-                f"in database '{table_delete.db_name}': "
-                f"{str(e.orig)}"
-            )
-            logger.warning(error_message)
+        if "1146" in str(e).lower() or "1051" in str(e).lower():
+            error_message = f"Table '{table_delete.db_name}' does not exist in database '{table_delete.db_name}'"
+            logger.warning(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
 
-        # Catch all other errors and log error message
         else:
-            error_message = f"Error deleting table: {str(e.orig)}"
-            logger.error(error_message)
+            error_message = f"Error occurred deleting table '{table_delete.db_name}'"
+            logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
             )

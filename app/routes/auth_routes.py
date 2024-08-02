@@ -16,15 +16,12 @@ from app.crud import auth_crud
 from app.database import db_connect
 from app.schemas import auth_schemas
 from app.utils.logging import setup_logging
-
-# Custom imports
 from config import Settings
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logging
 logger = setup_logging()
 
 # ------------------------------
@@ -40,7 +37,6 @@ limiter = Limiter(key_func=get_remote_address)
 # ------------------------------
 
 
-# Register new API user
 @router.post(
     "/register-api-user",
     status_code=201,
@@ -58,17 +54,18 @@ async def register_api_user(
     Endpoint allows authenticated admin user to register new API user.
 
     Parameters:
-    - **user**: user schemcontaining username and
-    password of API user to be registered.
-    - **db**: database session obtained from *get_db* dependency.
-    - **current_user**: currently authenticated admin user obtained
-    from *admin_user* dependency.
+        **user**: Pydantic model containing username, password, is_admin flag of
+        API user to be registered.
+        **db**: Async database session obtained from *get_db* dependency.
+        **current_user**: Active authenticated admin user obtained from *admin_user* dependency.
 
     Returns:
-    - Success message with username of registered API user.
+        dict: Success message with username of registered API user.
 
     Raises:
-    - HTTPException (403): If current user is not an admin.
+        HTTPException (400): If API user already exists.
+        HTTPException (403): If current user is not an admin.
+        HTTPException (500): If any other error occurs.
 
     Example request body:
     ```json
@@ -87,25 +84,22 @@ async def register_api_user(
     ```
     """
 
-    logger.info("auth_routes.py ---> register_api_user:")
+    logger.debug(f"Registering new API user '{user.username}'...")
 
-    # Check if user exists
     db_user = await authenticate.check_user_exists(db, user.username)
 
-    if db_user:  # If user is not None (i.e. user exists)
-        message = f'API user "{user.username}" already registered'
+    if db_user:
+        message = f"API user '{user.username}' already registered"
         logger.error(message)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
     else:
-        # Hash password
         hashed_password = hashing.hash_password(user.password)
-        # Create user
-        message = await auth_crud.create_api_user(db, user, hashed_password)
+        user.password = hashed_password  # Update password with hashed password
+        message = await auth_crud.create_api_user(db, user)
 
     return message
 
 
-# Create and return an access token
 @router.post(
     "/get-token",
     response_model=auth_schemas.Token,
@@ -120,20 +114,18 @@ async def get_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     """
-    Endpoint allows API user to obtain access token
-    by providing their username and password.
+    Endpoint allows API user to obtain access token by providing their username and password.
 
     Parameters:
-    - **db**: database session obtained from *get_db* dependency.
-    - **form_data**: OAuth2 password request form containing username
-    and password of API user.
+        **db**: Async database session obtained from *get_db* dependency.
+        **form_data**: OAuth2 password request form containing username & password of API user.
 
     Returns:
-    - access token.
+        dict: Access token and token type.
 
     Raises:
-    - HTTPException (401): If username is not found in database.
-    - HTTPException (403): If user not admin or password is invalid.
+        HTTPException (401): If API user not found in database.
+        HTTPException (500): If any other error occurs.
 
     Example request body:
     ```json
@@ -151,12 +143,10 @@ async def get_access_token(
     }
     ```
     """
-    logger.info("auth_routes.py ---> get_access_token:")
+    logger.debug("Executing get-token endpoint...")
 
-    # Authenticate user
     user = await authenticate.authenticate_user(db, form_data.username, form_data.password)
 
-    # Create access token
     access_token = token.create_access_token(data={"sub": user.username})
 
     return access_token

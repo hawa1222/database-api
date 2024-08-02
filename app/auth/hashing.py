@@ -1,13 +1,11 @@
 from passlib.hash import bcrypt
 
-# Custom imports
 from app.utils.logging import setup_logging
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logging
 logger = setup_logging()
 
 # ------------------------------
@@ -26,7 +24,7 @@ def hash_password(password):
         str: hashed password.
     """
 
-    logger.info("hashing.py ---> hash_password:")
+    logger.debug("Hashing password...")
 
     hashed_password = bcrypt.hash(password)
     logger.info("Password hashed")
@@ -36,18 +34,18 @@ def hash_password(password):
 
 def verify_password(plain_password, hashed_password):
     """
-    Verify if plain password matches hashed password.
+    Verifies plain password against hashed password.
 
     Parameters:
         plain_password (str): plain password to verify.
         hashed_password (str): hashed password to compare against.
 
     Returns:
-        bool: True if plain password matches hashed password,
+        password_verified (bool): True if plain password matches hashed password,
         False otherwise.
     """
 
-    logger.info("hashing.py ---> verify_password:")
+    logger.debug("Verifying hashed password...")
 
     password_verified = bcrypt.verify(plain_password, hashed_password)
 

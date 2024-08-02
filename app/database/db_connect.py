@@ -4,15 +4,12 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from app.utils.logging import setup_logging
-
-# Custom imports
 from config import Settings
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logging
 logger = setup_logging()
 
 # ------------------------------
@@ -41,19 +38,19 @@ Base = declarative_base()
 # ------------------------------
 
 
-# Function to get database connection
 async def get_db():
     """
     Returns database session for performing database operations.
 
     Returns:
-        SessionLocal: database session object.
+        SessionLocal: Asynchronous database session.
 
     Raises:
-        None
+        RuntimeError: If event loop is closed.
     """
 
-    logger.info("db_connect.py ---> get_db:")
+    logger.debug("Getting database connection...")
+
     db = SessionLocal()  # Create new database session
     session_id = hash(db)  # Get session ID
 
