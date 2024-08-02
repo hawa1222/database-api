@@ -1,99 +1,84 @@
 from fastapi import HTTPException
 from fastapi import status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth import hashing
 from app.models import auth_models
-
-# Custom imports
 from app.utils.logging import setup_logging
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logging
 logger = setup_logging()
 
 # ------------------------------
-# Define user authentication function
+# Define user authentication functions
 # ------------------------------
 
 
-# Function to retrieve user by their username
-async def check_user_exists(db: AsyncSession, username: str):
+async def check_user_exists(db, username):
     """
-    Retrieve user from database by their username
-    Args:
-        db (AsyncSession): database session.
-        username (str): username of user to retrieve.
+    Fetches user details from database based on username.
+
+    Parameters:
+        db (AsyncSession): Async database session.
+        username (str): Username of user to check.
 
     Returns:
-        User: user object if found, None otherwise.
+        User: User object (id, username, hashed_password, is_admin) if user exists,
 
     Raises:
-        HTTPException: If there is an error retrieving user.
-
+        HTTPException (500): If error retrieving user.
     """
-
-    logger.info("authenticate.py ---> check_user_exists:")
+    logger.debug("Checking if user exists in database...")
 
     try:
-        # Create query to retrieve user by their username
         query = select(auth_models.User).where(auth_models.User.username == username)
-        result = await db.execute(query)  # Execute query
-        user = result.scalars().first()  # Get first result
+        result = await db.execute(query)
+        user = result.scalars().first()
 
-        # If user is None, log message and return None
         if not user:
-            logger.info(f"API user '{username}' not found'")
+            logger.warning(f"API user '{username}' not found in database")
             return None
 
-        logger.info(f"API user'{username}' details found")
+        return user
 
-        return user  # Return user object
-
-    # If there is an error retrieving user, log error and raise exception
     except Exception as e:
-        await db.rollback()  # Rollback transaction
-        error_message = f"Error retrieving API user '{username}': {str(e)}"
-        logger.error(error_message)
+        await db.rollback()
+        error_message = f"Error occurred checking if user '{username}' exists"
+        logger.error(error_message + f": {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
-        ) from e
+        )
 
 
-# Function to authenticate user based on provided username and password
-async def authenticate_user(db: AsyncSession, username: str, password: str):
+async def authenticate_user(db, username, password):
     """
     Authenticate user by checking if provided username and password match
     stored credentials.
 
     Parameters:
-        db (AsyncSession): database session.
-        username (str): username of user to authenticate.
-        password (str): password of user to authenticate.
+        db (AsyncSession): Async database session.
+        username (str): Username of user.
+        password (str): Password of user.
 
     Returns:
-        User: user object (username, hashed_password) if authentication
+        user: User object (id, username, hashed_password, is_admin) if authentication
         succeeds, None otherwise.
 
     Raises:
-        HTTPException (401): authentication fails due to invalid credentials.
+        HTTPException (401): Authentication fails due to invalid credentials.
     """
 
-    logger.info("authenticate.py ---> authenticate_user:")
+    logger.debug("Authenticating provided user credentials...")
 
-    # Check if user exists in database
     user = await check_user_exists(db, username)
 
-    # If user is found and password is valid, return user object
     if user and hashing.verify_password(password, user.hashed_password):
-        logger.info(f"API user '{username}' authenticated")
+        logger.info(f"API user '{username}' exists and credentials are valid")
         return user
 
-    # If authentication fails, log message and raise generic HTTPException
     message = "Invalid username or password"
     logger.error(message)
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=message)

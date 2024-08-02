@@ -3,8 +3,6 @@ from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import auth_models
-
-# Custom imports
 from app.schemas import auth_schemas
 from app.utils.logging import setup_logging
 
@@ -12,7 +10,6 @@ from app.utils.logging import setup_logging
 # Set up logging
 # ------------------------------
 
-# Initialise logger
 logger = setup_logging()
 
 # ------------------------------
@@ -20,45 +17,39 @@ logger = setup_logging()
 # ------------------------------
 
 
-# Function to create an API user
-async def create_api_user(db: AsyncSession, user: auth_schemas.UserCreate, hashed_password: str):
+async def create_api_user(db: AsyncSession, user: auth_schemas.UserCreate):
     """
-    Create an API user in database.
+    Creates API user in database.
 
     Parameters:
-        db (AsyncSession): database session.
-        user (schemas.UserCreate): user object containing username,
-        password, and is_admin flag.
-        hashed_password (str): hashed password for user.
+        db (AsyncSession): Async database session.
+        user (Pydantic model): User object (username, password (hashed), is_admin status).
 
     Returns:
-        dict: dictionary containing success message or an error message.
+        dict: Success message with username of registered API user.
 
     Raises:
-        HTTPException: If there is an error creating API user.
+        HTTPException (500): If error creating API user.
     """
-
-    logger.info("auth_crud.py ---> create_api_user:")
+    logger.debug("Creating API user...")
 
     try:
-        # Create new user object
         db_user = auth_models.User(
-            username=user.username, hashed_password=hashed_password, is_admin=user.is_admin
-        )
-        db.add(db_user)  # Add user to database
-        await db.commit()  # Commit transaction
-        await db.refresh(db_user)  # Refresh user object
+            username=user.username, hashed_password=user.password, is_admin=user.is_admin
+        )  # Create user object
+        db.add(db_user)
+        await db.commit()
+        await db.refresh(db_user)
 
         message = f"API user '{user.username}' created successfully"
         logger.info(message)
 
-        return {"message": message}  # Return success message
+        return {"message": message}
 
-    # If there is an error creating user, log error and raise exception
     except Exception as e:
-        db.rollback()  # Rollback transaction
-        error_message = f"Error creating API user '{user.username}': {str(e)}"
-        logger.error(error_message)
+        db.rollback()
+        error_message = f"Error occurred creating API user '{user.username}'"
+        logger.error(error_message + f": {str(e.orig)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_message
         )

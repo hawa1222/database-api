@@ -3,7 +3,6 @@ from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import String
 
-# Custom imports
 from app.database.db_connect import Base
 
 # ------------------------------
@@ -11,10 +10,8 @@ from app.database.db_connect import Base
 # ------------------------------
 
 
-# Define User model
-# Inherits from Base class, represents users table in database
 class User(Base):
-    __tablename__ = "api_users"  # Table name in database
+    __tablename__ = "api_users"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True)

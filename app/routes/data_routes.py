@@ -11,15 +11,12 @@ from app.database import db_connect
 from app.schemas import auth_schemas
 from app.schemas import data_schemas
 from app.utils.logging import setup_logging
-
-# Custom imports
 from config import Settings
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logging
 logger = setup_logging()
 
 # ------------------------------
@@ -30,18 +27,12 @@ router = APIRouter()
 
 limiter = Limiter(key_func=get_remote_address)
 
-# -----------------how -------------
+# ------------------------------
 # API routes & endpoints for database operations
 # ------------------------------
 
 
-# Create new database
-@router.post(
-    "/create-database",
-    status_code=201,
-    summary="Create new database",
-    tags=["Database"],
-)
+@router.post("/create-database", status_code=201, summary="Create new database", tags=["Database"])
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def create_database(
     request: Request,
@@ -50,20 +41,21 @@ async def create_database(
     current_user: auth_schemas.User = Depends(authorise.admin_user),
 ):
     """
-    Endpoint allows authenticated user with or without
-    admin privileges to create new database.
+    Endpoint allows authenticated user with admin privileges to create new database.
 
     Parameters:
-    - **database**: Database schemcontaining name of database to be created.
-    - **db**: database session obtained from *get_db* dependency.
-    - **current_user**: currently authenticated user obtained from
-    *active_user* dependency.
+        **database**: Pydantic model containing name of database to be created.
+        **db**: Async database session obtained from *get_db* dependency.
+        **current_user**: Active authenticated admin user obtained from *admin_user* dependency.
 
     Returns:
-    -  Success message with name of created database.
+        dict: Success message with name of created database.
 
     Raises:
-    - HTTPException (400): If database already exists.
+        HTTPException (400): If database already exists.
+        HTTPException (401): If token is invalid.
+        HTTPException (403): If current user is not an admin.
+        HTTPException (500): If any other error occurs.
 
     Example request body:
     ```json
@@ -80,18 +72,12 @@ async def create_database(
     ```
     """
 
-    logger.info("data_routes ---> create_database:")
+    logger.debug("Executing create-database endpoint...")
 
     return await data_crud.create_database(db, database)
 
 
-# Create new database user
-@router.post(
-    "/create-db-user",
-    status_code=201,
-    summary="Create new database user",
-    tags=["User"],
-)
+@router.post("/create-db-user", status_code=201, summary="Create new database user", tags=["User"])
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def create_db_user(
     request: Request,
@@ -103,17 +89,18 @@ async def create_db_user(
     Endpoint allows authenticated admin user to create new database user.
 
     Parameters:
-    - **user**: user schemcontaining host, username, password,
-    database name, and privileges of database user to be created.
-    - **db**: database session obtained from *get_db* dependency.
-    - **current_user**: currently authenticated admin user obtained
-    from *admin_user* dependency.
+        **user**: Pydantic model containing host, username, password, database name,
+        and privileges of database user to be created.
+        **db**: Async database session obtained from *get_db* dependency.
+        **current_user**: Active authenticated admin user obtained from *admin_user* dependency.
 
     Returns:
-    - Success message with username of created database user.
+        dict: Success message with name of created database user.
 
     Raises:
-    - HTTPException (500): If there is an error creating database user.
+        HTTPException (401): If token is invalid.
+        HTTPException (403): If current user is not an admin.
+        HTTPException (500): If any other error occurs.
 
     Example request body:
     ```json
@@ -134,12 +121,11 @@ async def create_db_user(
     ```
     """
 
-    logger.info("data_routes ---> create_db_user:")
+    logger.debug("Executing create-db-user endpoint...")
 
     return await data_crud.create_db_user(db, user)
 
 
-# Create new table
 @router.post("/create-table", status_code=201, summary="Create new table", tags=["Tables"])
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def create_table(
@@ -152,17 +138,19 @@ async def create_table(
     Endpoint allows authenticated user to create new table in database.
 
     Parameters:
-    - **tables**: table schemcontaining name of database and
-    table to be created.
-    - **db**: database session obtained from *get_db* dependency.
-    - **current_user**: currently authenticated user obtained from
-    *active_user* dependency.
+        **tables**: Pydantic model containing name of database, name of database
+        and table to be created.
+        **db**: Async database session obtained from *get_db* dependency.
+        **current_user**: Active authenticated admin user obtained from *admin_user* dependency.
 
     Returns:
-    - Success message with name of created table.
+        dict: Success message with name of created table.
 
     Raises:
-    - HTTPException (400): If table already exists.
+        HTTPException (400): If table already exists.
+        HTTPException (401): If token is invalid.
+        HTTPException (403): If current user is not an admin.
+        HTTPException (500): If any other error occurs.
 
     Example request body:
     ```json
@@ -186,12 +174,11 @@ async def create_table(
     ```
     """
 
-    logger.info("data_routes ---> create_table:")
+    logger.debug("Executing create-table endpoint...")
 
     return await data_crud.create_table(db, tables)
 
 
-# Insert data into table
 @router.post("/insert-data", status_code=201, summary="Insert data into table", tags=["Tables"])
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def insert_data(
@@ -204,17 +191,18 @@ async def insert_data(
     Endpoint allows authenticated admin user to insert datinto database.
 
     Parameters:
-    - **data_insert**: datschemcontaining name of database
-    and table, and datto be inserted.
-    - **db**: database session obtained from *get_db* dependency.
-    - **current_user**: currently authenticated admin user obtained from
-    *admin_user* dependency.
+        **data_insert**: Pydantic model containing name of database and table, and data.
+        **db**: Async database session obtained from *get_db* dependency
+        **current_user**: Active authenticated admin user obtained from *admin_user* dependency.
 
     Returns:
-    - Success message with number of rows inserted.
+        dict: Success message with number of records added and updated.
 
     Raises:
-    - HTTPException (404): If table does not exist in database.
+        HTTPException (401): If token is invalid.
+        HTTPException (403): If current user is not an admin.
+        HTTPException (404): If table does not exist in database.
+        HTTPException (500): If any other error occurs.
 
     Example request body:
     ```json
@@ -245,17 +233,13 @@ async def insert_data(
     ```
     """
 
-    logger.info("data_routes ---> insert_data:")
+    logger.debug("Executing insert-data endpoint...")
 
     return await data_crud.insert_data(db, data_insert)
 
 
-# Get data from table
 @router.get(
-    "/get-table/{db_name}/{table_name}",
-    status_code=200,
-    summary="Get table data",
-    tags=["Tables"],
+    "/get-table/{db_name}/{table_name}", status_code=200, summary="Get table data", tags=["Tables"]
 )
 @limiter.limit(Settings.API_RATE_LIMIT)
 async def get_table(
@@ -269,21 +253,22 @@ async def get_table(
     Endpoint allows authenticated admin user to retrieve datfrom table.
 
     Parameters:
-    - **db_name**: name of database.
-    - **table_name**: name of table.
-    - **db**: database session obtained from *get_db* dependency.
-    - **current_user**: currently authenticated admin user obtained
-    from *admin_user* dependency.
+        **db_name**: Name of database.
+        **table_name**: Name of table.
+        **db**: Async database session obtained from *get_db* dependency.
+        **current_user**: Active authenticated user obtained from *active_user* dependency.
 
     Returns:
-    - datfrom table.
+        dict: Dictionary containing table name and data.
 
     Raises:
-    - HTTPException (404): If table does not exist in database.
+        HTTPException (401): If token is invalid.
+        HTTPException (404): If table does not exist in database.
+        HTTPException (500): If any other error occurs.
 
     Example get request:
     ```
-    GET /get-table/new_database/new_table
+    GET / get - table / new_database / new_table
     ```
 
     Example response:
@@ -304,15 +289,13 @@ async def get_table(
     }
     """
 
-    logger.info("data_routes ---> get_table:")
+    logger.debug("Executing get-table endpoint...")
 
-    # Create table identification object
     table_fetch = data_schemas.TableIdentify(db_name=db_name, table_name=table_name)
 
     return await data_crud.get_table(db, table_fetch)
 
 
-# Delete table
 @router.delete(
     "/delete-table/{db_name}/{table_name}",
     status_code=200,
@@ -331,21 +314,23 @@ async def delete_table(
     Endpoint allows authenticated admin user to delete table from database.
 
     Parameters:
-    - **db_name**: name of database.
-    - **table_name**: name of table.
-    - **db**: database session obtained from *get_db* dependency.
-    - **current_user**: currently authenticated admin user obtained
-    from *admin_user* dependency.
+        **db_name**: Name of database.
+        **table_name**: Name of table.
+        **db**: Async database session obtained from *get_db* dependency.
+        **current_user**: Active authenticated admin user obtained from *admin_user* dependency.
 
     Returns:
-    - Success message with name of deleted table.
+        dict: Success message with name of deleted table.
 
     Raises:
-    - HTTPException (404): If table does not exist in database.
+        HTTPException (401): If token is invalid.
+        HTTPException (403): If current user is not an admin.
+        HTTPException (404): If table does not exist in database.
+        HTTPException (500): If any other error occurs.
 
     Example delete request:
     ```
-    DELETE /delete-table/new_database/new_table
+    DELETE / delete - table / new_database / new_table
     ```
 
     Example response:
@@ -356,9 +341,8 @@ async def delete_table(
     }
     """
 
-    logger.info("data_routes ---> delete_table:")
+    logger.debug("Executing delete-table endpoint...")
 
-    # Create table identification object
     table_delete = data_schemas.TableIdentify(db_name=db_name, table_name=table_name)
 
     return await data_crud.delete_table(db, table_delete)

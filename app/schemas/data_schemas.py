@@ -1,6 +1,4 @@
 from typing import Any
-from typing import Dict
-from typing import List
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -25,7 +23,7 @@ table_name_field = Field(
 )
 
 # ------------------------------
-# Database operations
+# Database Models
 # ------------------------------
 
 
@@ -39,8 +37,8 @@ class TableIdentify(BaseModel):
 
 
 class TableCreate(TableIdentify):
-    table_schema: Dict[str, str]
+    table_schema: dict[str, str]
 
 
 class TableData(TableIdentify):
-    data: List[Dict[str, Any]]
+    data: list[dict[str, Any]]

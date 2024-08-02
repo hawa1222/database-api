@@ -2,21 +2,17 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import authenticate
 from app.auth import token
 from app.database import db_connect
 from app.schemas import auth_schemas
-
-# Custom imports
 from app.utils.logging import setup_logging
 
 # ------------------------------
 # Set up logging
 # ------------------------------
 
-# Initialise logging
 logger = setup_logging()
 
 # ------------------------------
@@ -30,68 +26,56 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="get-token")
 # ------------------------------
 
 
-# Function to get current user based on provided token
-async def active_user(
-    db: AsyncSession = Depends(db_connect.get_db),
-    access_token: str = Depends(oauth2_scheme),
-):
+async def active_user(db=Depends(db_connect.get_db), access_token=Depends(oauth2_scheme)):
     """
-    Retrieves current user based on provided token.
+    Fetches current user based on provided token.
 
     Parameters:
-        db (AsyncSession): database session.
-        token (str): authentication token.
+        db (AsyncSession): Async database session.
+        token (str): Authentication token.
 
     Returns:
-        User: current user: id, username, hashed_password and admin status.
+        user (schema.User): User object (id, username, hashed_password and admin status).
 
     Raises:
-        HTTPException: If token is invalid.
+        HTTPException (401): If token is invalid.
     """
 
-    logger.info("authorise.py ---> active_user:")
+    logger.debug("Processing API token for active user...")
 
-    logger.info("Token received")
-
-    # Decode token and extract username
     username = token.decode_token(access_token)
 
-    # Get user from database based on username
     user = await authenticate.check_user_exists(db, username)
 
-    # If no user found in database, raise exception
     if user is None:
-        logger.warning(f"API user '{username}' not found in database")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     user = auth_schemas.User(**user.__dict__)
 
-    logger.info(f"API user '{user.username}' found in database, is_admin set to '{user.is_admin}'")
+    logger.info(f"API user '{user.username}' authenticated, admin status is'{user.is_admin}'")
 
     return user
 
 
-# Function to get current admin user
 async def admin_user(current_user: auth_schemas.User = Depends(active_user)):
     """
-    Get current admin user.
+    Checks if current user has admin status.
 
     Parameters:
-        current_user (UserCreate): current user.
+        current_user (schema.User): User object (id, username, hashed_password and admin status).
 
     Returns:
-        UserCreate: current active user object containing username,
-        password and admin status.
+        current_user (schema.User): User object.
 
     Raises:
-        HTTPException: If current user not an admin.
+        HTTPException (403): If user is not admin.
     """
 
-    logger.info("authorise.py ---> admin_user:")
-
-    # If current user.is_admin is False or None, raise exception
     if not current_user.is_admin:
-        error_message = f"Unauthorised access, admin access required. Current admin status is '{current_user.is_admin}'"
+        error_message = (
+            f"Unauthorised access, admin access required. "
+            f"Current admin status is '{current_user.is_admin}'"
+        )
         logger.error(error_message)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=error_message)
 
