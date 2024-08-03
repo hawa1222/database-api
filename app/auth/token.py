@@ -1,11 +1,7 @@
-from datetime import UTC
-from datetime import datetime
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
-from fastapi import HTTPException
-from fastapi import status
-from jose import JWTError
-from jose import jwt
+from fastapi import HTTPException, status
+from jose import JWTError, jwt
 
 from app.utils.logging import setup_logging
 from config import Settings
@@ -48,7 +44,8 @@ def create_access_token(data, expires_delta=timedelta(Settings.TOKEN_EXPIRE_MINU
         )  # Create access token using username, expiration time, and secret key
 
         logger.debug(
-            "Encoding complete. Access token created for API user " f"'{data.get('sub')}'"
+            "Encoding complete. Access token created for API user "
+            f"'{data.get('sub')}'"
         )
 
         return {"access_token": encoded_jwt, "token_type": "bearer"}
@@ -56,7 +53,8 @@ def create_access_token(data, expires_delta=timedelta(Settings.TOKEN_EXPIRE_MINU
     except Exception as e:
         logger.error(f"Error creating API user access token: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
         )
 
 

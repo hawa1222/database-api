@@ -1,5 +1,4 @@
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import HTTPException, status
 from sqlalchemy.future import select
 
 from app.auth import hashing

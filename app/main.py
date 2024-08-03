@@ -2,18 +2,15 @@ import time
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi import Request
-from slowapi import Limiter
-from slowapi import _rate_limit_exceeded_handler
+from fastapi import FastAPI, Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.auth import create_admin
 from app.database import db_connect
 from app.models import auth_models
-from app.routes import auth_routes
-from app.routes import data_routes
+from app.routes import auth_routes, data_routes
 from app.utils.logging import setup_logging
 
 # ------------------------------

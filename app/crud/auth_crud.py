@@ -1,5 +1,4 @@
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import auth_models
@@ -35,7 +34,9 @@ async def create_api_user(db: AsyncSession, user: auth_schemas.UserCreate):
 
     try:
         db_user = auth_models.User(
-            username=user.username, hashed_password=user.password, is_admin=user.is_admin
+            username=user.username,
+            hashed_password=user.password,
+            is_admin=user.is_admin,
         )  # Create user object
         db.add(db_user)
         await db.commit()

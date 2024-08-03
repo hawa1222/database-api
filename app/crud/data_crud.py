@@ -1,12 +1,10 @@
 import math
 
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import auth_schemas
-from app.schemas import data_schemas
+from app.schemas import auth_schemas, data_schemas
 from app.utils.logging import setup_logging
 
 # ------------------------------
@@ -181,7 +179,10 @@ async def create_table(db: AsyncSession, table_info: data_schemas.TableCreate):
         await db.rollback()
 
         if "1050" in str(e).lower():
-            error_message = f"Table '{table_info.table_name}' already exists in database '{table_info.db_name}'"
+            error_message = (
+                f"Table '{table_info.table_name}' already exists "
+                f"in database '{table_info.db_name}'"
+            )
             logger.warning(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
         else:
@@ -332,7 +333,8 @@ async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
 
         message = (
             f"Data insertion completed for table '{data_insert.table_name}' in database "
-            f"'{data_insert.db_name}': {added_count} records added or unchanged, {updated_count} records updated"
+            f"'{data_insert.db_name}': {added_count} records added or unchanged, "
+            f"{updated_count} records updated"
         )
         logger.info(message)
 
@@ -342,7 +344,10 @@ async def insert_data(db: AsyncSession, data_insert: data_schemas.TableData):
         await db.rollback()
 
         if "1146" in str(e).lower():
-            error_message = f"Table '{data_insert.table_name}' does not exist in database '{data_insert.db_name}'"
+            error_message = (
+                f"Table '{data_insert.table_name}' does not exist in "
+                f"database '{data_insert.db_name}'"
+            )
             logger.error(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         else:
@@ -426,7 +431,10 @@ async def delete_table(db: AsyncSession, table_delete: data_schemas.TableIdentif
         await db.rollback()
 
         if "1146" in str(e).lower() or "1051" in str(e).lower():
-            error_message = f"Table '{table_delete.db_name}' does not exist in database '{table_delete.db_name}'"
+            error_message = (
+                f"Table '{table_delete.db_name}' does not exist in "
+                f"database '{table_delete.db_name}'"
+            )
             logger.warning(error_message + f": {str(e.orig)}")
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
 

@@ -38,7 +38,9 @@ async def create_admin_user(db):
     logger.debug("Creating admin user...")
 
     try:
-        query = select(auth_models.User).where(auth_models.User.username == Settings.API_ADM_USER)
+        query = select(auth_models.User).where(
+            auth_models.User.username == Settings.API_ADM_USER
+        )
         user = await db.execute(query)  # Check if admin user already exists
         admin_user = user.scalars().first()
 
@@ -49,7 +51,9 @@ async def create_admin_user(db):
         else:
             hashed_password = hashing.hash_password(Settings.API_ADM_PASSWORD)
             admin_user = auth_models.User(
-                username=Settings.API_ADM_USER, hashed_password=hashed_password, is_admin=True
+                username=Settings.API_ADM_USER,
+                hashed_password=hashed_password,
+                is_admin=True,
             )
             db.add(admin_user)
             logger.debug("Admin user added to database")

@@ -1,6 +1,4 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import Request
+from fastapi import APIRouter, Depends, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,8 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import authorise
 from app.crud import data_crud
 from app.database import db_connect
-from app.schemas import auth_schemas
-from app.schemas import data_schemas
+from app.schemas import auth_schemas, data_schemas
 from app.utils.logging import setup_logging
 from config import Settings
 
@@ -21,7 +18,7 @@ logger = setup_logging()
 
 # ------------------------------
 # API Router configuration
-# ------------------------------
+# ------------------------------s
 
 router = APIRouter()
 

@@ -1,7 +1,4 @@
-from sqlalchemy import Boolean
-from sqlalchemy import Column
-from sqlalchemy import Integer
-from sqlalchemy import String
+from sqlalchemy import Boolean, Column, Integer, String
 
 from app.database.db_connect import Base
 

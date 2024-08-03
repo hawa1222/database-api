@@ -1,10 +1,7 @@
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.auth import authenticate
-from app.auth import token
+from app.auth import authenticate, token
 from app.database import db_connect
 from app.schemas import auth_schemas
 from app.utils.logging import setup_logging
